@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workmeet | Free Meetings for School & Work</title>
+    <meta name="description" content="The first 100% free meeting app designed for students and professionals. No limits. No hidden costs.">
+    <link rel="stylesheet" href="index.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar" style="justify-content: space-between; align-items: center; padding: 1.5rem 10%; position: sticky; top: 0;">
+        <div class="logo">
+            <img src="assets/logo.png" alt="Workmeet Logo" style="height: 120px; width: auto; object-fit: contain;">
+        </div>
+        <div class="nav-links" style="display: flex; gap: 3rem; align-items: center;">
+            <a href="#features" style="text-decoration: none; color: #0f172a; font-weight: 700;">Features</a>
+            <a href="#about" style="text-decoration: none; color: #0f172a; font-weight: 700;">About</a>
+            <a href="#contact" style="text-decoration: none; color: #0f172a; font-weight: 700;">Contact</a>
+            <button class="btn btn-secondary" style="padding: 1rem 2.5rem; font-size: 1rem;">Sign In</button>
+        </div>
+    </nav>
+    <main>
+        <section class="hero" style="min-height: 80vh; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <div class="badge">100% Free Forever</div>
+            <h1 style="font-size: 5rem; letter-spacing: -3px;">Meeting without <br> <span style="color: var(--primary)">Boundaries</span>.</h1>
+            <p class="subtitle" style="font-size: 1.5rem; max-width: 800px; margin: 2rem 0;">From solo projects to team syncs, Workmeet gives you a private, secure, and professional space. Always free. Forever Unlimited.</p>
+            
+            <div class="hero-btns" style="display: flex; gap: 1.5rem; margin-top: 2rem;">
+                <button class="btn btn-primary" style="padding: 1.5rem 3.5rem; font-size: 1.2rem;" onclick="scrollToJoinData()">Start My Meeting</button>
+                <button class="btn btn-secondary" style="padding: 1.5rem 3.5rem; font-size: 1.2rem;">Download App</button>
+            </div>
+        </section>
+
+        <!-- New Join Section (Separate) -->
+        <section id="join-section" style="padding: 8rem 10%; background: #f8fafc; border-radius: 60px; margin: 4rem 10%; text-align: center; box-shadow: 0 40px 100px -20px rgba(0,0,0,0.1);">
+            <div class="badge" style="background: rgba(0, 130, 145, 0.1); color: var(--primary);">Secure Entry</div>
+            <h2 style="font-size: 3.5rem; margin-top: 1rem;">Create Your Space</h2>
+            <p style="font-size: 1.2rem; color: var(--text-dim); margin-bottom: 3rem;">Just enter a room name and start your high-definition session instantly.</p>
+            
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 1.5rem; width: 100%; max-width: 500px; margin: 0 auto;">
+                <input type="text" id="join-room-name" placeholder="Type a Room Name (e.g. Sales, Group Class)" style="width: 100%; padding: 1.8rem 2.5rem; border-radius: 30px; border: 3px solid #e2e8f0; font-size: 1.2rem; font-family: 'Outfit'; outline: none; text-align: center; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1); transition: all 0.3s; border-color: var(--primary);">
+                <button class="btn btn-primary" style="width: 100%; padding: 1.8rem; font-size: 1.3rem; border-radius: 30px;" onclick="joinMeeting()">Start Meeting Room</button>
+            </div>
+        </section>
+
+        <script>
+            function scrollToJoinData() {
+                document.getElementById('join-section').scrollIntoView({ behavior: 'smooth' });
+                document.getElementById('join-room-name').focus();
+            }
+
+            function joinMeeting() {
+                const room = document.getElementById('join-room-name').value || 'Private Room';
+                window.location.href = `dashboard.html?room=${encodeURIComponent(room)}`;
+            }
+        </script>
+
+        <section id="features" class="features">
+            <div class="feature-card">
+                <span class="feature-icon">🎓</span>
+                <h3>Built for School</h3>
+                <p>Easy screen sharing, collaborative whiteboards, and class scheduling designed for students and teachers.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">💼</span>
+                <h3>Built for Work</h3>
+                <p>Professional calendar integration, high-definition calls, and secure encrypted meetings for your business.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">💰</span>
+                <h3>Truly Free</h3>
+                <p>No monthly fees. No time limits. No hidden costs. We believe communication should be accessible to everyone.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer style="padding: 4rem 10%; text-align: center; color: var(--text-dim); border-top: 1px solid rgba(255,255,255,0.05)">
+        <p>&copy; 2026 Workmeet App. Built for School and Work.</p>
+    </footer>
+</body>
+</html>
