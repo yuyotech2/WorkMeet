@@ -259,30 +259,50 @@
             }
 
             function saveMeeting() {
-                const title = document.getElementById('meet-title').value;
-                const time = document.querySelector('input[type="time"]').value;
-                
-                if (!title) {
-                    alert("Please enter a title for your meeting!");
-                    return;
-                }
+                try {
+                    const titleEl = document.getElementById('meet-title');
+                    const title = titleEl ? titleEl.value.trim() : "";
+                    const timeEl = document.querySelector('input[type="time"]');
+                    const time = timeEl ? timeEl.value : "14:00";
+                    
+                    if (!title) {
+                        alert("Please enter a title for your meeting!");
+                        return;
+                    }
 
-                // Add to Today's Cell (Day 18)
-                const todayCell = document.querySelector('.calendar-day .day-num.today').parentElement;
-                
-                const eventDiv = document.createElement('div');
-                eventDiv.className = `calendar-event ${currentCategory === 'school' ? 'school' : ''}`;
-                eventDiv.innerHTML = `<span style="font-weight: 800;">${time}</span> - ${title}`;
-                
-                todayCell.appendChild(eventDiv);
-                
-                // Switch to Calendar View so they see it
-                showView('calendar');
-                closeModal();
-                
-                // Success feedback
-                console.log(`Scheduled: ${title} at ${time}`);
-                document.getElementById('meet-title').value = ''; // Reset
+                    // Find Today's Cell (Looking for the number 19)
+                    const dayLabels = document.querySelectorAll('.day-num');
+                    let targetCell = null;
+                    const todayDate = new Date().getDate().toString();
+                    
+                    dayLabels.forEach(num => {
+                        if (num.innerText === todayDate) {
+                            targetCell = num.parentElement;
+                            num.classList.add('today'); // Highlight the real today!
+                        }
+                    });
+
+                    // Fallback to the first cell if today isn't found
+                    if (!targetCell) targetCell = document.querySelector('.calendar-day');
+                    
+                    if (targetCell) {
+                        const eventDiv = document.createElement('div');
+                        eventDiv.className = `calendar-event ${currentCategory === 'school' ? 'school' : ''}`;
+                        eventDiv.innerHTML = `<span style="font-weight: 800;">${time}</span> - ${title}`;
+                        targetCell.appendChild(eventDiv);
+                        
+                        // Switch to Calendar View
+                        showView('calendar');
+                        closeModal();
+                        
+                        // Clear input
+                        titleEl.value = '';
+                        console.log(`Successfully scheduled: ${title}`);
+                    }
+                } catch (err) {
+                    console.error("Save Error:", err);
+                    alert("Scheduler Error: " + err.message);
+                }
             }
 
             function copyLink() {
