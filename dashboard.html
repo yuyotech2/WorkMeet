@@ -3,33 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MASTER DASHBOARD v2.0 | Workmeet</title>
+    <title>MASTER DASHBOARD | Workmeet</title>
     <link rel="stylesheet" href="dashboard.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        .v2-status-bar {
-            background: #ef4444;
-            color: white;
-            padding: 8px 0;
-            text-align: center;
-            font-weight: 800;
-            font-size: 0.8rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-    </style>
 </head>
 <body>
-    <div class="v2-status-bar">🚀 WORKMEET V2.0 - MASTER ENGINE ACTIVE 🚀</div>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-logo" style="text-align: center; padding: 1rem;">
+            <div class="sidebar-logo" style="text-align: center; padding: 1rem; position: relative;">
                 <img src="assets/logo.png" alt="Logo" style="height: 100px; width: auto; border-radius: 20px; margin-bottom: 2rem;">
+                <div style="position: absolute; top: 10px; right: 10px; background: var(--primary); color: white; padding: 4px 10px; border-radius: 10px; font-weight: 800; font-size: 0.7rem;">v3.0 - WHITEBOARD</div>
             </div>
             <div class="sidebar-section">
                 <p class="sidebar-title">Manage</p>
-                <a href="#" class="sidebar-item active" id="btn-meetings" onclick="showView('meetings')">Meeting Hub</a>
-                <a href="#" class="sidebar-item" id="btn-calendar" onclick="showView('calendar')">Full Calendar</a>
+                <a href="#" class="sidebar-item active" id="btn-meetings">Meeting Hub</a>
+            </div>
+            <div class="sidebar-section">
+                <p class="sidebar-title">Spaces</p>
+                <a href="#" class="sidebar-item" id="btn-whiteboard" onclick="showView('whiteboard')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+                    Class Whiteboard
+                </a>
+            </div>
+            <div class="sidebar-section" style="margin-top: auto;">
+                <a href="index.html" class="sidebar-item">Leave Workspace</a>
             </div>
         </aside>
 
@@ -37,7 +34,6 @@
             <header class="top-bar" style="height: 100px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 3rem; background: #fff;">
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <div class="live-indicator"></div>
-                    <span class="version-label">v2.0</span>
                     <h2 id="room-display" style="margin: 0; font-size: 1.4rem;">Private Room</h2>
                 </div>
                 <div style="display: flex; align-items: center; gap: 2rem;">
@@ -59,20 +55,17 @@
                     </div>
                 </section>
 
-                <!-- Calendar View (Fixed Grid) -->
-                <section id="calendar-view" class="hidden" style="padding: 3rem;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 2rem;">
-                        <h2 style="margin: 0;">Full Planning Grid</h2>
-                        <button class="btn btn-primary" onclick="openCreateModal()">+ Create New</button>
+                <!-- Whiteboard Section (Drawable!) -->
+                <section id="whiteboard-view" class="hidden" style="padding: 3rem; height: 100%;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                        <h2 style="margin: 0;">Interactive Whiteboard</h2>
+                        <button class="btn btn-secondary" onclick="clearBoard()" style="width: auto; padding: 0.5rem 1.5rem;">Clear Board</button>
                     </div>
-                    <div class="calendar-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; border-radius: 20px; overflow: hidden;">
-                        <div class="calendar-day" onclick="openCreateModal(this)"><div class="day-num">18</div></div>
-                        <div class="calendar-day" onclick="openCreateModal(this)"><div class="day-num today" id="today-cell">19</div></div>
-                        <div class="calendar-day" onclick="openCreateModal(this)"><div class="day-num">20</div></div>
-                        <div class="calendar-day" onclick="openCreateModal(this)"><div class="day-num">21</div></div>
-                        <div class="calendar-day" onclick="openCreateModal(this)"><div class="day-num">22</div></div>
+                    <div style="background: white; border-radius: 30px; border: 2px solid #e2e8f0; height: 600px; box-shadow: 0 20px 50px rgba(0,0,0,0.05); overflow: hidden;">
+                        <canvas id="whiteboard" style="width: 100%; height: 100%; cursor: crosshair;"></canvas>
                     </div>
                 </section>
+
             </div>
 
             <!-- Footer Controls -->
@@ -82,6 +75,9 @@
                 </button>
                 <button class="control-btn" id="btn-video" onclick="toggleCamera()">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                </button>
+                <button class="control-btn" id="btn-share" onclick="toggleScreenShare()" title="Share Screen">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
                 </button>
                 <button class="control-btn" title="Chat" onclick="toggleChat()" id="btn-chat">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
@@ -100,49 +96,73 @@
         </aside>
     </div>
 
-    <!-- Planning Modal -->
-    <div class="modal-overlay hidden" id="modal">
-        <div class="modal-content">
-            <h3>Plan a Meet</h3>
-            <div class="form-group"><input type="text" class="form-input" placeholder="Title" id="meet-title"></div>
-            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                <button class="btn btn-secondary" style="flex: 1;" onclick="document.getElementById('modal').classList.add('hidden'); alert('Closed Successfully!')">Cancel</button>
-                <button class="modal-btn" style="flex: 1;" onclick="saveMeeting()">Save</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Script Master -->
     <script>
-        let selectedDateCell = null;
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomName = urlParams.get('room') || 'Private Room';
+        document.getElementById('room-display').innerText = roomName;
+
         let isCameraOn = false;
         let isMicOn = false;
 
         function showView(v) {
-            document.getElementById('meetings-view').classList.add('hidden');
-            document.getElementById('calendar-view').classList.add('hidden');
-            document.getElementById(v + '-view').classList.remove('hidden');
+            console.log("Switching to: " + v);
+            if(v === 'whiteboard') alert("Digital Whiteboard Engine Initializing... ✅");
+            
+            // Hide all views safely
+            const views = ['meetings', 'whiteboard'];
+            views.forEach(view => {
+                const el = document.getElementById(view + '-view');
+                if(el) el.classList.add('hidden');
+                const btn = document.getElementById('btn-' + view);
+                if(btn) btn.classList.remove('active');
+            });
+            
+            // Show target view
+            const target = document.getElementById(v + '-view');
+            if(target) target.classList.remove('hidden');
+            const targetBtn = document.getElementById('btn-' + v);
+            if(targetBtn) targetBtn.classList.add('active');
+            
+            if(v === 'whiteboard') initWhiteboard();
         }
 
-        function openCreateModal(cell) {
-            selectedDateCell = cell || document.getElementById('today-cell').parentElement;
-            document.getElementById('modal').classList.remove('hidden');
+        // --- WHITEBOARD BRAIN ---
+        let drawing = false;
+        function initWhiteboard() {
+            const canvas = document.getElementById('whiteboard');
+            const ctx = canvas.getContext('2d');
+            
+            // Force Canvas to fill its container
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#0f172a';
+
+            canvas.onmousedown = () => drawing = true;
+            canvas.onmouseup = () => { drawing = false; ctx.beginPath(); };
+            canvas.onmousemove = (e) => {
+                if(!drawing) return;
+                const r = canvas.getBoundingClientRect();
+                ctx.lineTo(e.clientX - r.left, e.clientY - r.top);
+                ctx.stroke();
+            };
+        }
+        function clearBoard() {
+            const canvas = document.getElementById('whiteboard');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
 
-        function saveMeeting() {
+        function copyLink() {
             try {
-                const title = document.getElementById('meet-title').value.trim();
-                if(!title) return alert("Title please");
-                if(selectedDateCell) {
-                    const ev = document.createElement('div');
-                    ev.className = 'calendar-event';
-                    ev.innerText = '14:00 - ' + title;
-                    selectedDateCell.appendChild(ev);
-                    document.getElementById('modal').classList.add('hidden');
-                    showView('calendar');
-                    alert("Meeting Saved & Sent! ✅");
-                }
-            } catch(e) { alert("Save Error: " + e.message); }
+                const room = document.getElementById('room-display').innerText;
+                const url = window.location.href.split('?')[0] + '?room=' + encodeURIComponent(room);
+                navigator.clipboard.writeText(url);
+                alert("Invite Link Copied: " + url);
+            } catch(e) { alert("Copy Error: " + e.message); }
         }
 
         function toggleChat() { document.getElementById('chat-panel').classList.toggle('hidden'); }
@@ -156,6 +176,16 @@
             d.innerText = txt;
             m.appendChild(d);
             i.value = '';
+        }
+
+        async function toggleScreenShare() {
+            try {
+                const s = await navigator.mediaDevices.getDisplayMedia({video: true});
+                const v = document.getElementById('user-video');
+                v.srcObject = s;
+                document.getElementById('btn-share').classList.toggle('sharing');
+                alert("Screen Sharing Active! ✅");
+            } catch(e) { alert("Sharing Error: " + e.message); }
         }
 
         async function toggleCamera() {
