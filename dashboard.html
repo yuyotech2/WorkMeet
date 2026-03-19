@@ -290,24 +290,13 @@
                     console.log("Invite clicked...");
                     const displayEl = document.getElementById('room-display');
                     const roomName = displayEl ? displayEl.innerText : 'Private Room';
-                    
-                    const url = `https://workmeet.app/join/${encodeURIComponent(roomName.toLowerCase().replace(/ /g, '-'))}`;
-                    
+                    const currentPath = window.location.href.split('?')[0];
+                    const url = `${currentPath}?room=${encodeURIComponent(roomName)}`;
                     const targetTextEl = document.getElementById('room-url-text');
                     if (targetTextEl) targetTextEl.innerText = url;
-                    
                     const modalEl = document.getElementById('invite-modal');
-                    if (modalEl) {
-                        modalEl.classList.remove('hidden');
-                        console.log("Modal shown successfully!");
-                    } else {
-                        console.error("Invite modal NOT found in DOM!");
-                        alert("Error: Invitation window is missing. I'm fixing it now!");
-                    }
-                } catch (err) {
-                    console.error("CopyLink Error:", err);
-                    alert("Invite Error: " + err.message);
-                }
+                    if (modalEl) modalEl.classList.remove('hidden');
+                } catch (err) { alert("Invite Error: " + err.message); }
             }
 
             function closeInviteModal() {
@@ -316,16 +305,38 @@
             }
 
             function doActualCopy() {
-                try {
-                    const copyText = document.getElementById('room-url-text').innerText;
-                    navigator.clipboard.writeText(copyText).then(() => {
-                        alert("Invite Link Copied: " + copyText);
-                        closeInviteModal();
-                    });
-                } catch (err) {
-                    console.error("Clipboard Error:", err);
-                    alert("Copy failed. Please copy the link manually from the box.");
+                const copyText = document.getElementById('room-url-text').innerText;
+                navigator.clipboard.writeText(copyText).then(() => {
+                    alert("Invite Link Copied: " + copyText);
+                    closeInviteModal();
+                });
+            }
+
+            function toggleChat() {
+                const panel = document.getElementById('chat-panel');
+                panel.classList.toggle('hidden');
+                // Scroll to bottom when opening
+                if (!panel.classList.contains('hidden')) {
+                    const messages = document.getElementById('chat-messages');
+                    messages.scrollTop = messages.scrollHeight;
                 }
+            }
+
+            function sendMessage() {
+                const input = document.getElementById('chat-input');
+                const text = input.value.trim();
+                if (!text) return;
+
+                const messages = document.getElementById('chat-messages');
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'message you';
+                msgDiv.innerHTML = `
+                    <span style="display: block; font-size: 0.75rem; font-weight: 800; opacity: 0.6; margin-bottom: 4px;">You</span>
+                    ${text}
+                `;
+                messages.appendChild(msgDiv);
+                messages.scrollTop = messages.scrollHeight;
+                input.value = '';
             }
         </script>
 
@@ -337,12 +348,12 @@
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34l1 1L23 7v10"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
             </button>
             <button class="control-btn" title="Sharing Screen" id="btn-screen" onclick="toggleScreenShare()">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2-2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
             </button>
             <button class="control-btn" title="Recording">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>
             </button>
-            <button class="control-btn" title="Chat">
+            <button class="control-btn" title="Chat" onclick="toggleChat()" id="btn-chat">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
             </button>
             <button class="control-btn leave" title="Leave" onclick="window.location.href='index.html'">
@@ -351,7 +362,33 @@
         </footer>
         </div> <!-- end scroll-area -->
     </main>
+    <!-- Chat Panel (Toggleable) -->
+        <aside class="chat-panel hidden" id="chat-panel">
+            <header class="chat-header">
+                <h3 style="margin: 0; font-size: 1.2rem;">Chat Messenger</h3>
+                <button class="btn btn-secondary" style="width: 40px; height: 40px; border-radius: 12px; padding: 0;" onclick="toggleChat()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </header>
+            
+            <div class="chat-messages" id="chat-messages">
+                <div class="message them">
+                    <span style="display: block; font-size: 0.75rem; font-weight: 800; opacity: 0.6; margin-bottom: 4px;">System</span>
+                    Welcome to the meeting room! Chat is private and high-definition.
+                </div>
+            </div>
+
+            <footer class="chat-footer">
+                <div class="chat-input-wrapper">
+                    <input type="text" class="chat-input" placeholder="Type a message..." id="chat-input" onkeypress="if(event.key === 'Enter') sendMessage()">
+                    <button class="btn btn-primary" style="width: 40px; height: 40px; border-radius: 8px; padding: 0;" onclick="sendMessage()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </button>
+                </div>
+            </footer>
+        </aside>
     </div> <!-- end app-container -->
+
 
     <div class="modal-overlay hidden" id="invite-modal">
         <div class="modal-content" style="max-width: 500px; text-align: center;">
