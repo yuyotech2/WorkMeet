@@ -127,12 +127,47 @@
 
         /* System diagnostics card (already dark, just keep) */
         body.dark-mode [style*="background: #1e293b"] { border-color: #334155 !important; }
+        /* --- MOBILE RESPONSIVE ENGINE --- */
+        @media (max-width: 1024px) {
+            .app-container { flex-direction: column; }
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                top: 0;
+                bottom: 0;
+                display: flex !important;
+                z-index: 1000;
+                transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+                box-shadow: 20px 0 50px rgba(0,0,0,0.1);
+            }
+            .sidebar.mobile-open { transform: translateX(280px); }
+            .sidebar-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(15, 23, 42, 0.5);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                z-index: 999;
+                display: none;
+            }
+            .sidebar-overlay.active { display: block; }
+            .meeting-content { width: 100%; padding: 0; }
+            .top-bar { padding: 0 1.5rem !important; height: 80px !important; }
+            .video-grid { grid-template-columns: 1fr !important; padding: 1rem !important; gap: 1rem !important; }
+            .participant-box { height: 200px !important; border-radius: 20px !important; }
+            .controls-bar { height: 100px !important; gap: 1rem !important; padding: 0 1rem; }
+            .control-btn { width: 50px !important; height: 50px !important; border-radius: 12px !important; }
+            .chat-panel { width: 100% !important; position: fixed; inset: 0; z-index: 1100; }
+        }
     </style>
 </head>
 <body>
     <canvas id="particle-canvas"></canvas>
     <div class="app-container">
-        <aside class="sidebar">
+        <!-- Sidebar Overlay for Mobile -->
+        <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+        <aside class="sidebar" id="main-sidebar">
             <div class="sidebar-logo" style="text-align: center; padding: 2rem; position: relative;">
                 <img src="assets/logo.png" alt="Exo Logo" style="height: 80px; width: auto; border-radius: 20px;">
                 <div style="position: absolute; bottom: 0; left: 0; width: 100%; text-align: center; font-weight: 800; font-size: 0.7rem; color: #64748b;">
@@ -166,6 +201,10 @@
         <main class="meeting-content">
             <header class="top-bar" style="height: 100px; border-bottom: none; display: flex; align-items: center; justify-content: space-between; padding: 0 3rem; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02); z-index: 50;">
                 <div style="display: flex; align-items: center; gap: 15px;">
+                    <!-- Mobile Menu Toggle -->
+                    <button class="menu-toggle" onclick="toggleSidebar()" style="background: none; border: none; padding: 10px; cursor: pointer; color: #0f172a; margin-right: 10px;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    </button>
                     <div class="live-indicator"></div>
                     <h2 id="room-display" style="margin: 0; font-size: 1.4rem; color: #0f172a;">Private Room</h2>
                 </div>
@@ -1446,6 +1485,14 @@
         }
 
         function toggleChat() { document.getElementById('chat-panel').classList.toggle('hidden'); }
+        
+        function toggleSidebar() {
+            const sb = document.getElementById('main-sidebar');
+            const ov = document.getElementById('sidebar-overlay');
+            sb.classList.toggle('mobile-open');
+            ov.classList.toggle('active');
+        }
+
         function sendMessage() {
             const i = document.getElementById('chat-input');
             const txt = i.value.trim();
