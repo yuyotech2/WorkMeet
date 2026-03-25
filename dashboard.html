@@ -913,7 +913,7 @@
                 // POPULATE HARDWARE SELECTORS
                 await updateDeviceList();
                 
-                const myId = roomName.replace(/\s+/g, '') + '-' + Math.floor(Math.random()*10000);
+                const myId = roomName.replace(/\s+/g, '') + '-' + Date.now() + '-' + Math.floor(Math.random()*1000);
                 peer = new Peer(myId);
                 
                 peer.on('open', (id) => {
@@ -945,13 +945,14 @@
 
         function handleData(c) {
             activeConnections[c.peer] = c;
-            
-            // INTRODUCE NEW PEERS:
-            // If we are the host, tell everyone already here to call this new person!
-            const hostId = urlParams.get('host');
-            if(!hostId) { // We are the host
-                broadcast({type: 'introduce', peerId: c.peer});
-            }
+            c.on('open', () => {
+                // INTRODUCE NEW PEERS:
+                // Only the host should be the 'Introduction Broker' to avoid signal storms
+                const hId = urlParams.get('host');
+                if(!hId) { 
+                    broadcast({type: 'introduce', peerId: c.peer});
+                }
+            });
 
             c.on('data', (data) => {
                 if(data.type === 'draw') remoteDraw(data);
