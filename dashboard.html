@@ -906,7 +906,11 @@
 
         async function initRealTime() {
             try {
-                myStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+                // LAG-FREE CONSTRAINTS: 360p is perfect for dashboard tiles & 70% lighter on bandwidth
+                myStream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 640, height: 360, frameRate: 24 },
+                    audio: true
+                });
                 document.getElementById('user-video').srcObject = myStream;
                 isCameraOn = true; isMicOn = true;
                 
@@ -945,11 +949,15 @@
 
         function handleData(c) {
             activeConnections[c.peer] = c;
+            
             c.on('open', () => {
-                // INTRODUCE NEW PEERS:
-                // Only the host should be the 'Introduction Broker' to avoid signal storms
+                // ROSTER SYNC:
+                // If we are the host, send this new person the LIST of everyone else!
                 const hId = urlParams.get('host');
                 if(!hId) { 
+                    const roster = Object.keys(activeConnections).filter(id => id !== c.peer);
+                    c.send({type: 'welcome', roster: roster});
+                    // Also tell everyone else about this new person
                     broadcast({type: 'introduce', peerId: c.peer});
                 }
             });
@@ -958,6 +966,21 @@
                 if(data.type === 'draw') remoteDraw(data);
                 if(data.type === 'clear') remoteClear();
                 if(data.type === 'leave') removeParticipantFromGrid(data.peerId);
+                
+                if(data.type === 'welcome') {
+                    // We just joined! The host gave us a list of active students.
+                    // Connect with a small delay (staggered) to prevent lag spikes
+                    data.roster.forEach((otherId, index) => {
+                        setTimeout(() => {
+                            if (otherId === peer.id) return;
+                            const call = peer.call(otherId, myStream);
+                            handleCall(call);
+                            const conn = peer.connect(otherId);
+                            handleData(conn);
+                        }, index * 200); // 200ms stagger between each person joining
+                    });
+                }
+
                 if(data.type === 'introduce' && data.peerId !== peer.id) {
                     // Host introduced us to someone new! Call them.
                     const newCall = peer.call(data.peerId, myStream);
