@@ -1561,10 +1561,10 @@
                         <span style="font-size: 1.5rem;">📄</span>
                         <div style="overflow: hidden;">
                             <div style="font-weight: 800; font-size: 0.8rem; color: #0f172a; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${msg.fileName}</div>
-                            <div style="font-size: 0.65rem; color: #64748b; font-weight: 700;">SHARED FILE</div>
+                            <div style="font-size: 0.65rem; color: #64748b; font-weight: 700;">PREVIEW FILE</div>
                         </div>
                     </div>
-                    <a href="${msg.file}" download="${msg.fileName}" style="background: #3b82f6; color: white; text-decoration: none; padding: 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 800; text-align: center; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 5px 15px rgba(59, 130, 246, 0.2);">DOWNLOAD NOW</a>
+                    <button onclick="previewFile('${msg.file}')" style="background: #0f172a; color: white; padding: 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">OPEN FOR PREVIEW</button>
                 </div>`;
             } else {
                 d.innerText = msg.text;
@@ -1585,6 +1585,11 @@
                 appendMessage({ file: data, fileName: f.name, from: 'ME' });
             };
             reader.readAsDataURL(f);
+        }
+
+        function previewFile(data) {
+            const w = window.open();
+            w.document.write('<iframe src="' + data + '" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>');
         }
 
         function sendMessage() {
