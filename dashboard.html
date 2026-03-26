@@ -1018,7 +1018,7 @@
             });
 
             c.on('data', (data) => {
-                if(data.type === 'draw') remoteDraw(data);
+                if(data.type === 'draw') drawRemote(data);
                 if(data.type === 'clear') remoteClear();
                 if(data.type === 'leave') removeParticipantFromGrid(data.peerId);
                 if(data.type === 'chat') appendMessage({ text: data.text, from: 'THEM' });
@@ -1418,7 +1418,7 @@
         }
         renderCalendar();
         function initWhiteboard() {
-            const canvas = document.getElementById('whiteboard');
+            canvas = document.getElementById('whiteboard'); // Assign to global canvas
             if(!canvas) return;
             const container = canvas.parentElement;
             const r = container.getBoundingClientRect();
@@ -1441,50 +1441,74 @@
                 return { x: cx - rect.left, y: cy - rect.top };
             };
 
-            const start = (e) => { drawing = true; const p = getPos(e); lastX = p.x; lastY = p.y; };
-            const stop = () => { drawing = false; ctx.beginPath(); };
-            const move = (e) => {
-                if(!drawing) return;
-                const p = getPos(e);
+            const start = (e) => { 
+                drawing = true; 
+                const p = getPos(e); 
+                lastX = p.x; 
+                lastY = p.y; 
+                // Begin path immediately for smoother drawing start
                 ctx.beginPath();
                 ctx.moveTo(lastX, lastY);
-                ctx.lineTo(p.x, p.y);
+            };
+            const stop = () => { drawing = false; }; // No need for ctx.beginPath() here, it's done in start/draw
+            
+            function draw(e) {
+                if (!drawing) return;
+                const rect = canvas.getBoundingClientRect();
+                const x = (e.clientX || e.touches[0].clientX) - rect.left;
+                const y = (e.clientY || e.touches[0].clientY) - rect.top;
+                
+                const ctx = canvas.getContext('2d'); // Get context inside draw for safety
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
                 ctx.strokeStyle = penColor;
                 ctx.lineWidth = penSize;
+                
+                ctx.lineTo(x, y);
                 ctx.stroke();
-                
-                broadcast({ 
-                    type: 'draw', 
-                    x0: lastX / canvas.width, y0: lastY / canvas.height,
-                    x1: p.x / canvas.width, y1: p.y / canvas.height,
-                    color: penColor, size: penSize
-                });
-                
-                lastX = p.x; lastY = p.y;
-            };
 
-            canvas.onmousedown = start; canvas.onmousemove = move; window.onmouseup = stop;
+                // BROADCAST: Normalize to 0.0 - 1.0 for cross-device accuracy
+                broadcast({
+                    type: 'draw',
+                    x1: lastX / canvas.width,
+                    y1: lastY / canvas.height,
+                    x2: x / canvas.width,
+                    y2: y / canvas.height,
+                    color: penColor,
+                    size: penSize
+                });
+
+                [lastX, lastY] = [x, y];
+            }
+
+            canvas.onmousedown = start; canvas.onmousemove = draw; window.onmouseup = stop;
             canvas.ontouchstart = (e) => { e.preventDefault(); start(e.touches[0] || e); }; 
-            canvas.ontouchmove = (e) => { e.preventDefault(); move(e.touches[0] || e); }; 
+            canvas.ontouchmove = (e) => { e.preventDefault(); draw(e.touches[0] || e); }; 
             canvas.ontouchend = stop;
         }
 
-        function remoteDraw(data) {
-            const canvas = document.getElementById('whiteboard');
+        function drawRemote(data) {
+            if (!canvas) return; // Ensure canvas is initialized
             const ctx = canvas.getContext('2d');
-            ctx.lineCap = 'round';
+            // DENORMALIZE: Convert percentages back to local pixels
+            const rx1 = data.x1 * canvas.width;
+            const ry1 = data.y1 * canvas.height;
+            const rx2 = data.x2 * canvas.width;
+            const ry2 = data.y2 * canvas.height;
+
             ctx.lineJoin = 'round';
-            ctx.beginPath();
-            ctx.moveTo(data.x0 * canvas.width, data.y0 * canvas.height);
-            ctx.lineTo(data.x1 * canvas.width, data.y1 * canvas.height);
+            ctx.lineCap = 'round';
             ctx.strokeStyle = data.color;
             ctx.lineWidth = data.size;
+            ctx.beginPath();
+            ctx.moveTo(rx1, ry1);
+            ctx.lineTo(rx2, ry2);
             ctx.stroke();
         }
 
         function remoteClear() {
             const canvas = document.getElementById('whiteboard');
-            canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
+            if (canvas) canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
         }
 
         function clearBoard() {
