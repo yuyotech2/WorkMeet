@@ -1555,7 +1555,17 @@
             const d = document.createElement('div');
             d.className = 'message ' + (msg.from === 'ME' ? 'you' : 'them');
             if(msg.file) {
-                d.innerHTML = `<div style="padding: 10px; background: rgba(0,0,0,0.05); border-radius: 10px; font-size: 0.7rem;">📁 FILE: <a href="${msg.file}" download="${msg.fileName}" style="color: var(--primary); font-weight: 800;">${msg.fileName}</a></div>`;
+                d.innerHTML = `
+                <div style="background: rgba(15, 23, 42, 0.05); padding: 15px; border-radius: 18px; border: 1px solid rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 10px; width: 220px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 1.5rem;">📄</span>
+                        <div style="overflow: hidden;">
+                            <div style="font-weight: 800; font-size: 0.8rem; color: #0f172a; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${msg.fileName}</div>
+                            <div style="font-size: 0.65rem; color: #64748b; font-weight: 700;">SHARED FILE</div>
+                        </div>
+                    </div>
+                    <a href="${msg.file}" download="${msg.fileName}" style="background: #3b82f6; color: white; text-decoration: none; padding: 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 800; text-align: center; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 5px 15px rgba(59, 130, 246, 0.2);">DOWNLOAD NOW</a>
+                </div>`;
             } else {
                 d.innerText = msg.text;
             }
