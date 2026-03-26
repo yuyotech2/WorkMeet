@@ -977,8 +977,16 @@
         let isCameraOn = false;
         let isMicOn = false;
         let peer = null;
-        let activeConnections = {}; // Map of peerId -> connection
-        let activeCalls = {};       // Map of peerId -> call
+        let activeConnections = {}; 
+        let activeCalls = {};       
+        
+        // --- WHITEBOARD MEMORY (Safe Sync) ---
+        let whiteboardLoaded = false;
+        let lastX = 0;
+        let lastY = 0;
+        let penColor = '#0f172a';
+        let penSize = 4;
+        let drawing = false;
 
         async function initRealTime() {
             try {
@@ -1200,11 +1208,7 @@
             if(v === 'whiteboard') initWhiteboard();
         }
 
-        // --- WHITEBOARD BRAIN ---
-        let drawing = false;
-        let penColor = '#0f172a';
-        let penSize = 3;
-
+        // Whiteboard helpers remaining...
         function setPenColor(c) { 
             penColor = c; 
             const newSize = (c === '#fff') ? 20 : 3;
@@ -1442,11 +1446,6 @@
             container.innerHTML = html;
         }
         renderCalendar();
-
-        let whiteboardLoaded = false;
-        let lastX = 0;
-        let lastY = 0;
-
         function initWhiteboard() {
             const canvas = document.getElementById('whiteboard');
             if(!whiteboardLoaded) {
