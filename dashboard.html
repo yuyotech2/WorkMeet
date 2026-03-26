@@ -843,20 +843,49 @@
                             <div style="display: flex; gap: 2rem;">
                                 <div style="flex: 1;">
                                     <label style="display: block; font-weight: 800; color: #94a3b8; font-size: 0.75rem; letter-spacing: 1px; margin-bottom: 0.5rem;">INTERFACE LANGUAGE</label>
-                                    <div style="position: relative;">
-                                        <input type="text" placeholder="🔍 Search 7,170+ Languages & Dialects..." style="width: 100%; padding: 15px; border-radius: 15px; border: 2px solid #3b82f6; background: #f8fafc; font-family: inherit; font-weight: 600; color: #0f172a; outline: none; margin-bottom: 15px; box-shadow: 0 5px 20px rgba(59, 130, 246, 0.1);">
-                                        <select style="width: 100%; padding: 15px; border-radius: 15px; border: 2px solid #f1f5f9; background: #f8fafc; font-family: inherit; font-weight: 600; color: #0f172a; outline: none; cursor: pointer;">
-                                            <option>🇺🇸 English (Universal Master)</option>
-                                            <option>🌍 7,170 Languages Supported (Auto-Translate Active)</option>
-                                            <option>🇪🇸 Español</option>
-                                            <option>🇫🇷 Français</option>
-                                            <option>🇯🇵 日本語</option>
-                                            <option>🇸🇦 العربية</option>
-                                            <option>🇨🇳 中文</option>
-                                            <option>🇮🇳 हिन्दी</option>
-                                            <option>... Search for others above ...</option>
-                                        </select>
-                                    </div>
+                                    <select style="width: 100%; padding: 15px; border-radius: 15px; border: 2px solid #f1f5f9; background: #f8fafc; font-family: inherit; font-weight: 600; color: #0f172a; outline: none; cursor: pointer;">
+                                        <option>🌍 Universal (Auto-Detect 7,170+ Dialects)</option>
+                                        <option>🇺🇸 English (US/International)</option>
+                                        <option>🇬🇧 English (UK/British)</option>
+                                        <option>🇵🇭 Tagalog / Filipino</option>
+                                        <option>🇻🇳 Tiếng Việt</option>
+                                        <option>🇮🇳 हिन्दी (Hindi)</option>
+                                        <option>🇧🇩 বাংলা (Bengali)</option>
+                                        <option>🇮🇳 मराठी (Marathi)</option>
+                                        <option>🇮🇳 తెలుగు (Telugu)</option>
+                                        <option>🇮🇳 தமிழ் (Tamil)</option>
+                                        <option>🇸🇦 العربية (Arabic)</option>
+                                        <option>🇨🇳 中文 (Simplified Chinese)</option>
+                                        <option>🇯🇵 日本語 (Japanese)</option>
+                                        <option>🇰🇷 한국어 (Korean)</option>
+                                        <option>🇪🇸 Español (Spain)</option>
+                                        <option>🇲🇽 Español (Latin America)</option>
+                                        <option>🇫🇷 Français (France)</option>
+                                        <option>🇨🇦 Français (Canada)</option>
+                                        <option>🇵🇹 Português (Brasil)</option>
+                                        <option>🇵🇹 Português (Portugal)</option>
+                                        <option>🇷🇺 Русский (Russian)</option>
+                                        <option>🇩🇪 Deutsch (German)</option>
+                                        <option>🇹🇷 Türkçe (Turkish)</option>
+                                        <option>🇮🇩 Bahasa Indonesia</option>
+                                        <option>🇲🇾 Bahasa Melayu</option>
+                                        <option>🇳🇬 Hausa / Igbo / Yoruba</option>
+                                        <option>🇪🇹 Amharic</option>
+                                        <option>🇰🇪 Kiswahili (Swahili)</option>
+                                        <option>🇿🇦 Afrikaans / Zulu / Xhosa</option>
+                                        <option>🇹🇭 ไทย (Thai)</option>
+                                        <option>🇮🇷 فارسی (Persian)</option>
+                                        <option>🇵🇱 Polski (Polish)</option>
+                                        <option>🇺🇦 Українська (Ukrainian)</option>
+                                        <option>🇷🇴 Română (Romanian)</option>
+                                        <option>🇳🇱 Nederlands (Dutch)</option>
+                                        <option>🇬🇷 Ελληνικά (Greek)</option>
+                                        <option>🇨🇿 Čeština (Czech)</option>
+                                        <option>🇭🇺 Magyar (Hungarian)</option>
+                                        <option>🇸🇪 Svenska (Swedish)</option>
+                                        <option>🇮🇱 עברית (Hebrew)</option>
+                                        <option>🗺️ 7,000+ Other Dialects (Cloud Sync)</option>
+                                    </select>
                                 </div>
                                 <div style="flex: 1;">
                                     <label style="display: block; font-weight: 800; color: #94a3b8; font-size: 0.75rem; letter-spacing: 1px; margin-bottom: 0.5rem;">TIME ZONE</label>
@@ -1455,27 +1484,24 @@
             const canvas = document.getElementById('whiteboard');
             if(!canvas) return;
             const container = canvas.parentElement;
+            const r = container.getBoundingClientRect();
             
-            const syncSize = () => {
-                const r = container.getBoundingClientRect();
-                if(r.width > 0 && r.height > 0) {
-                    canvas.width = r.width;
-                    canvas.height = r.height;
-                }
-            };
-            syncSize();
+            // Critical: Only size if container is visible!
+            if(r.width > 0 && r.height > 0) {
+                canvas.width = r.width;
+                canvas.height = r.height;
+                console.log("WHITEBOARD RE-INITIALIZED: " + canvas.width + "x" + canvas.height);
+            }
             
-            const ctx = canvas.getContext('2d', { alpha: false });
+            const ctx = canvas.getContext('2d');
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(0,0,canvas.width,canvas.height);
 
             const getPos = (e) => {
-                const r = canvas.getBoundingClientRect();
+                const rect = canvas.getBoundingClientRect();
                 const cx = (e.clientX || (e.touches && e.touches[0].clientX));
                 const cy = (e.clientY || (e.touches && e.touches[0].clientY));
-                return { x: cx - r.left, y: cy - r.top };
+                return { x: cx - rect.left, y: cy - rect.top };
             };
 
             const start = (e) => { drawing = true; const p = getPos(e); lastX = p.x; lastY = p.y; };
@@ -1486,8 +1512,8 @@
                 ctx.beginPath();
                 ctx.moveTo(lastX, lastY);
                 ctx.lineTo(p.x, p.y);
-                ctx.strokeStyle = penColor || '#0f172a';
-                ctx.lineWidth = penSize || 4;
+                ctx.strokeStyle = penColor;
+                ctx.lineWidth = penSize;
                 ctx.stroke();
                 
                 broadcast({ 
@@ -1501,12 +1527,9 @@
             };
 
             canvas.onmousedown = start; canvas.onmousemove = move; window.onmouseup = stop;
-            canvas.ontouchstart = (e) => { e.preventDefault(); start(e.touches[0]); }; 
-            canvas.ontouchmove = (e) => { e.preventDefault(); move(e.touches[0]); }; 
+            canvas.ontouchstart = (e) => { e.preventDefault(); start(e.touches[0] || e); }; 
+            canvas.ontouchmove = (e) => { e.preventDefault(); move(e.touches[0] || e); }; 
             canvas.ontouchend = stop;
-            
-            // EMERGENCY RE-SYNC
-            setInterval(syncSize, 1000);
         }
 
         function remoteDraw(data) {
