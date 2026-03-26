@@ -959,8 +959,12 @@
         <aside class="chat-panel hidden" id="chat-panel">
             <header class="chat-header"><h3>Chat</h3></header>
             <div class="chat-messages" id="chat-messages"></div>
-            <footer class="chat-footer">
-                <input type="text" id="chat-input" placeholder="Type..." onkeypress="if(event.key === 'Enter') sendMessage()">
+            <footer class="chat-footer" style="display: flex; align-items: center; gap: 10px; padding: 15px; background: white; border-top: 1px solid #e2e8f0;">
+                <button onclick="shareFile()" style="background: none; border: none; cursor: pointer; opacity: 0.6; padding: 5px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                    <input type="file" id="file-share-input" onchange="handleFileSelect(event)" style="display: none;">
+                </button>
+                <input type="text" id="chat-input" placeholder="Type..." onkeypress="if(event.key === 'Enter') sendMessage()" style="flex: 1; border: none; outline: none; font-family: inherit; font-size: 0.9rem;">
             </footer>
         </aside>
     </div>
@@ -1039,6 +1043,7 @@
                 if(data.type === 'clear') remoteClear();
                 if(data.type === 'leave') removeParticipantFromGrid(data.peerId);
                 if(data.type === 'chat') appendMessage({ text: data.text, from: 'THEM' });
+                if(data.type === 'file') appendMessage({ file: data.data, fileName: data.name, from: 'THEM' });
                 
                 if(data.type === 'welcome') {
                     // We just joined! The host gave us a list of active students.
@@ -1438,6 +1443,10 @@
         }
         renderCalendar();
 
+        let whiteboardLoaded = false;
+        let lastX = 0;
+        let lastY = 0;
+
         function initWhiteboard() {
             const canvas = document.getElementById('whiteboard');
             if(!whiteboardLoaded) {
@@ -1545,9 +1554,27 @@
             if (!m) return;
             const d = document.createElement('div');
             d.className = 'message ' + (msg.from === 'ME' ? 'you' : 'them');
-            d.innerText = msg.text;
+            if(msg.file) {
+                d.innerHTML = `<div style="padding: 10px; background: rgba(0,0,0,0.05); border-radius: 10px; font-size: 0.7rem;">📁 FILE: <a href="${msg.file}" download="${msg.fileName}" style="color: var(--primary); font-weight: 800;">${msg.fileName}</a></div>`;
+            } else {
+                d.innerText = msg.text;
+            }
             m.appendChild(d);
             m.scrollTop = m.scrollHeight;
+        }
+
+        function shareFile() { document.getElementById('file-share-input').click(); }
+
+        function handleFileSelect(e) {
+            const f = e.target.files[0];
+            if(!f) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                const data = reader.result;
+                broadcast({ type: 'file', data: data, name: f.name });
+                appendMessage({ file: data, fileName: f.name, from: 'ME' });
+            };
+            reader.readAsDataURL(f);
         }
 
         function sendMessage() {
