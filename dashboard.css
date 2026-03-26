@@ -243,6 +243,13 @@ body {
 .control-btn.leave {
     background: #ef4444;
     border-color: #ef4444;
+    color: white;
+    width: auto !important;
+    min-width: 130px;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    padding: 0 20px;
 }
 
 .control-btn.sharing {
