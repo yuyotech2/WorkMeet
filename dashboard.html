@@ -1205,7 +1205,7 @@
             const targetBtn = document.getElementById('btn-' + v);
             if(targetBtn) targetBtn.classList.add('active');
             
-            if(v === 'whiteboard') initWhiteboard();
+            if(v === 'whiteboard') setTimeout(initWhiteboard, 200);
         }
 
         // Whiteboard helpers remaining...
@@ -1448,20 +1448,23 @@
         renderCalendar();
         function initWhiteboard() {
             const canvas = document.getElementById('whiteboard');
-            if(!whiteboardLoaded) {
-                const rect = canvas.parentElement.getBoundingClientRect();
+            const rect = canvas.parentElement.getBoundingClientRect();
+            
+            // Set REAL internal resolution to match screen
+            if (canvas.width !== rect.width || canvas.height !== rect.height) {
                 canvas.width = rect.width;
                 canvas.height = rect.height;
-                whiteboardLoaded = true;
+                console.log("WHITEBOARD SYNCED: " + canvas.width + "x" + canvas.height);
             }
+            
             const ctx = canvas.getContext('2d');
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
 
             const getPos = (e) => {
                 const r = canvas.getBoundingClientRect();
-                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+                const clientX = (e.clientX || (e.touches && e.touches[0].clientX));
+                const clientY = (e.clientY || (e.touches && e.touches[0].clientY));
                 return { x: clientX - r.left, y: clientY - r.top };
             };
 
@@ -1477,7 +1480,7 @@
                 ctx.lineWidth = penSize;
                 ctx.stroke();
                 
-                // SYNC: Normalized coordinates (0 to 1) for all screens
+                // SYNC Percentages
                 broadcast({ 
                     type: 'draw', 
                     x0: lastX / canvas.width, y0: lastY / canvas.height,
