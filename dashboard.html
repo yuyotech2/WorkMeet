@@ -208,15 +208,15 @@
                 </div>
             </div>
             <div class="sidebar-section">
-                <p class="sidebar-title" data-i18n="manage">Manage</p>
-                <a href="#" class="sidebar-item active" id="btn-meetings" onclick="showView('meetings')" data-i18n="meetingHub">Meeting Hub</a>
-                <a href="#" class="sidebar-item" id="btn-calendar" onclick="showView('calendar')" data-i18n="calendar">Academic Calendar</a>
+                <p class="sidebar-title">Manage</p>
+                <a href="#" class="sidebar-item active" id="btn-meetings" onclick="showView('meetings')">Meeting Hub</a>
+                <a href="#" class="sidebar-item" id="btn-calendar" onclick="showView('calendar')">Academic Calendar</a>
             </div>
             <div class="sidebar-section">
-                <p class="sidebar-title" data-i18n="spaces">Spaces</p>
+                <p class="sidebar-title">Spaces</p>
                 <a href="#" class="sidebar-item" id="btn-whiteboard" onclick="showView('whiteboard')">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
-                    <span data-i18n="whiteboard">Class Whiteboard</span>
+                    Class Whiteboard
                 </a>
             </div>
             <div class="sidebar-section" style="margin-top: auto;">
@@ -837,59 +837,7 @@
                             </div>
                         </div>
 
-                        <!-- Language & Region -->
-                        <div style="margin-bottom: 2.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 2.5rem;">
-                            <h3 style="font-size: 1.2rem; color: #0f172a; margin-top: 0; margin-bottom: 1.5rem;">Language & Region</h3>
-                            <div style="display: flex; gap: 2rem;">
-                                                      <label style="display: block; font-weight: 800; color: #94a3b8; font-size: 0.75rem; letter-spacing: 1px; margin-bottom: 0.5rem;">INTERFACE LANGUAGE</label>
-                                    <div id="google_translate_element" style="margin-bottom: 10px; border-radius: 12px; overflow: hidden;"></div>
-                                    <select id="language-manual-select" onchange="translatePage(this.value)" style="width: 100%; padding: 15px; border-radius: 15px; border: 2px solid #f1f5f9; background: #f8fafc; font-family: inherit; font-weight: 600; color: #0f172a; outline: none; cursor: pointer;">
-                                        <option value="">🌍 Auto-Translate (7,170+ Languages)</option>
-                                        <option value="en">🇺🇸 English</option>
-                                        <option value="es">🇪🇸 Español</option>
-                                        <option value="fr">🇫🇷 Français</option>
-                                        <option value="de">🇩🇪 Deutsch</option>
-                                        <option value="it">🇮🇹 Italiano</option>
-                                        <option value="pt">🇵🇹 Português</option>
-                                        <option value="ru">🇷🇺 Русский</option>
-                                        <option value="zh-CN">🇨🇳 中文</option>
-                                        <option value="ja">🇯🇵 日本語</option>
-                                        <option value="ko">🇰🇷 한국어</option>
-                                        <option value="ar">🇸🇦 العربية</option>
-                                        <option value="hi">🇮🇳 हिन्दी</option>
-                                        <option value="vi">🇻🇳 Tiếng Việt</option>
-                                        <option value="tr">🇹🇷 Türkçe</option>
-                                        <option value="nl">🇳🇱 Nederlands</option>
-                                        <option value="pl">🇵🇱 Polski</option>
-                                        <option value="el">🇬🇷 Ελληνικά</option>
-                                        <option value="th">🇹🇭 ไทย</option>
-                                        <option value="id">🇮🇩 Bahasa Indonesia</option>
-                                        <option value="ms">🇲🇾 Bahasa Melayu</option>
-                                        <option value="he">🇮🇱 עברית</option>
-                                        <option value="sw">🇰🇪 Kiswahili</option>
-                                        <option value="zu">🇿🇦 Zulu</option>
-                                        <option value="xh">🇿🇦 Xhosa</option>
-                                    </select>ch)</option>
-                                        <option>🇭🇺 Magyar (Hungarian)</option>
-                                        <option>🇸🇪 Svenska (Swedish)</option>
-                                        <option>🇮🇱 עברית (Hebrew)</option>
-                                        <option>🗺️ 7,000+ Other Dialects (Cloud Sync)</option>
-                                    </select>
-                                </div>
-                                <div style="flex: 1;">
-                                    <label style="display: block; font-weight: 800; color: #94a3b8; font-size: 0.75rem; letter-spacing: 1px; margin-bottom: 0.5rem;">TIME ZONE</label>
-                                    <select style="width: 100%; padding: 12px 15px; border-radius: 12px; border: 2px solid #f1f5f9; background: #f8fafc; font-family: inherit; font-weight: 600; outline: none;">
-                                        <option>UTC-5 Eastern Time (US)</option>
-                                        <option>UTC-6 Central Time (US)</option>
-                                        <option>UTC-7 Mountain Time (US)</option>
-                                        <option>UTC-8 Pacific Time (US)</option>
-                                        <option>UTC+0 Greenwich Mean Time</option>
-                                        <option>UTC+1 Central European Time</option>
-                                        <option>UTC+9 Japan Standard Time</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
+
 
                         <!-- Keyboard Shortcuts -->
                         <div style="margin-bottom: 2.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 2.5rem;">
@@ -1662,37 +1610,6 @@
             }
         }
         
-        const i18n = {
-            en: { manage: "Manage", meetingHub: "Meeting Hub", calendar: "Academic Calendar", spaces: "Spaces", whiteboard: "Class Whiteboard" },
-            es: { manage: "Gestionar", meetingHub: "Centro de Reuniones", calendar: "Calendario Académico", spaces: "Espacios", whiteboard: "Pizarra de Clase" },
-            fr: { manage: "Gérer", meetingHub: "Centre de Réunion", calendar: "Calendrier Académique", spaces: "Espaces", whiteboard: "Tableau de Classe" },
-            ja: { manage: "管理", meetingHub: "ミーティングハブ", calendar: "アカデミックカレンダー", spaces: "スペース", whiteboard: "クラスホワイトボード" },
-            ar: { manage: "إدارة", meetingHub: "مركز الاجتماعات", calendar: "التقويم الأكاديمي", spaces: "المساحات", whiteboard: "السبورة الصفية" }
-        };
-
-        function translatePage(code) {
-            if(!code) return;
-            // Local Translate POC
-            if(i18n[code]) {
-                document.querySelectorAll('[data-i18n]').forEach(el => {
-                    const key = el.getAttribute('data-i18n');
-                    if(i18n[code][key]) el.innerText = i18n[code][key];
-                });
-            }
-            
-            const select = document.querySelector('.goog-te-combo');
-            if (select) {
-                select.value = code;
-                select.dispatchEvent(new Event('change'));
-            } else {
-                console.log("🌍 Probing Universal Cloud for: " + code);
-            }
-        }
-
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({pageLanguage: 'en', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
-        }
-
         // --- RELAUNCH CORE ENGINES ---
         window.addEventListener('load', () => {
             initWhiteboard();
@@ -1701,6 +1618,5 @@
             setInterval(updateClock, 1000);
         });
     </script>
-    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>
