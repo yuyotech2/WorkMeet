@@ -129,8 +129,8 @@
         body.dark-mode [style*="background: #1e293b"] { border-color: #334155 !important; }
         /* --- PREMIUM MOBILE MASTERCLASS --- */
         @media (max-width: 1024px) {
-            html, body { overflow-x: hidden !important; width: 100% !important; }
-            .app-container { flex-direction: column !important; overflow: hidden !important; width: 100vw !important; }
+            html, body { overflow-x: hidden !important; width: 100% !important; margin: 0; padding: 0; }
+            .app-container { display: block !important; width: 100vw !important; overflow: hidden !important; }
             
             .sidebar {
                 position: fixed !important;
@@ -138,68 +138,59 @@
                 top: 0 !important;
                 bottom: 0 !important;
                 width: 280px !important;
-                display: none !important; /* COMPACT HIDE */
+                display: none !important; /* TOTAL HIDE TO PREVENT GAPS */
                 z-index: 1000 !important;
-                transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
             }
             .sidebar.mobile-open { display: flex !important; transform: translateX(300px); }
             
-            .sidebar-overlay {
-                position: fixed;
-                inset: 0;
-                background: rgba(15, 23, 42, 0.5);
-                backdrop-filter: blur(12px);
-                z-index: 999;
-                display: none;
-            }
-            .sidebar-overlay.active { display: block; }
-
             .meeting-content { 
                 width: 100vw !important; 
-                height: 100vh !important; 
-                padding: 0 !important; 
                 margin: 0 !important;
-                flex: 1 !important;
-                display: flex !important;
-                flex-direction: column !important;
+                padding: 0 !important;
+                min-width: 100vw !important;
+                height: 100vh !important;
+                display: block !important;
             }
             
             .top-bar { 
-                width: 100% !important;
-                padding: 0 1.5rem !important; 
+                width: 100vw !important;
+                padding: 0 1rem !important; 
                 height: 70px !important; 
-                justify-content: space-between !important;
-            }
-            
-            .scroll-area { width: 100% !important; padding-bottom: 120px !important; }
-
-            .video-grid { 
-                display: block !important; /* Force block flow */
-                width: 100% !important;
-                padding: 1.2rem !important; 
                 box-sizing: border-box !important;
             }
+            
+            .video-grid { 
+                width: 100% !important;
+                padding: 1rem !important; 
+                margin: 0 !important;
+                box-sizing: border-box !important;
+            }
+            
             .participant-box { 
                 width: 100% !important;
                 height: 220px !important; 
-                margin-bottom: 1.5rem !important;
-                border-radius: 25px !important; 
-                border: 3px solid #ffffff !important;
+                margin-bottom: 1rem !important;
+                border-radius: 20px !important; 
+            }
+            
+            /* Fix Guest Controls */
+            .participant-box .controls { 
+                position: absolute !important;
+                right: 10px !important;
+                top: 10px !important;
             }
             
             .controls-bar { 
                 position: fixed !important;
-                bottom: 20px !important;
-                width: 92% !important;
-                left: 4% !important;
-                height: 75px !important;
-                border-radius: 20px !important;
-                background: rgba(15, 23, 42, 0.9) !important;
-                padding: 0 1rem !important;
-                gap: 1rem !important;
+                bottom: 15px !important;
+                width: 94% !important;
+                left: 3% !important;
+                height: 70px !important;
+                z-index: 101 !important;
+                padding: 0 10px !important;
+                box-sizing: border-box !important;
             }
-            .control-btn { width: 45px !important; height: 45px !important; border-radius: 12px !important; }
-            .btn-primary { display: none !important; } /* Hide Invite on mobile to save space */
+            .btn-primary { display: none !important; } 
         }
     </style>
 </head>
@@ -1047,6 +1038,7 @@
                 if(data.type === 'draw') remoteDraw(data);
                 if(data.type === 'clear') remoteClear();
                 if(data.type === 'leave') removeParticipantFromGrid(data.peerId);
+                if(data.type === 'chat') appendMessage({ text: data.text, from: 'THEM' });
                 
                 if(data.type === 'welcome') {
                     // We just joined! The host gave us a list of active students.
@@ -1446,10 +1438,6 @@
         }
         renderCalendar();
 
-        let whiteboardLoaded = false;
-        let lastX = 0;
-        let lastY = 0;
-
         function initWhiteboard() {
             const canvas = document.getElementById('whiteboard');
             if(!whiteboardLoaded) {
@@ -1462,34 +1450,38 @@
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
 
-            canvas.onmousedown = (e) => {
+            const getPos = (e) => {
                 const r = canvas.getBoundingClientRect();
-                lastX = e.clientX - r.left;
-                lastY = e.clientY - r.top;
-                drawing = true;
+                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+                return { x: clientX - r.left, y: clientY - r.top };
             };
-            
-            canvas.onmouseup = () => { drawing = false; };
-            canvas.onmouseout = () => { drawing = false; };
-            
-            canvas.onmousemove = (e) => {
+
+            const start = (e) => { drawing = true; const p = getPos(e); lastX = p.x; lastY = p.y; };
+            const stop = () => { drawing = false; ctx.beginPath(); };
+            const move = (e) => {
                 if(!drawing) return;
-                const r = canvas.getBoundingClientRect();
-                const currentX = e.clientX - r.left;
-                const currentY = e.clientY - r.top;
-                
+                const p = getPos(e);
                 ctx.beginPath();
                 ctx.moveTo(lastX, lastY);
-                ctx.lineTo(currentX, currentY);
+                ctx.lineTo(p.x, p.y);
                 ctx.strokeStyle = penColor;
                 ctx.lineWidth = penSize;
                 ctx.stroke();
                 
-                broadcast({type: 'draw', x0: lastX, y0: lastY, x1: currentX, y1: currentY, color: penColor, size: penSize});
+                // SYNC: Normalized coordinates (0 to 1) for all screens
+                broadcast({ 
+                    type: 'draw', 
+                    x0: lastX / canvas.width, y0: lastY / canvas.height,
+                    x1: p.x / canvas.width, y1: p.y / canvas.height,
+                    color: penColor, size: penSize
+                });
                 
-                lastX = currentX;
-                lastY = currentY;
+                lastX = p.x; lastY = p.y;
             };
+
+            canvas.onmousedown = start; canvas.onmousemove = move; window.onmouseup = stop;
+            canvas.ontouchstart = start; canvas.ontouchmove = (e) => { e.preventDefault(); move(e); }; canvas.ontouchend = stop;
         }
 
         function remoteDraw(data) {
@@ -1497,18 +1489,19 @@
             const ctx = canvas.getContext('2d');
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
-            
             ctx.beginPath();
-            ctx.moveTo(data.x0, data.y0);
-            ctx.lineTo(data.x1, data.y1);
+            ctx.moveTo(data.x0 * canvas.width, data.y0 * canvas.height);
+            ctx.lineTo(data.x1 * canvas.width, data.y1 * canvas.height);
             ctx.strokeStyle = data.color;
             ctx.lineWidth = data.size;
             ctx.stroke();
         }
+
         function remoteClear() {
             const canvas = document.getElementById('whiteboard');
             canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
         }
+
         function clearBoard() {
             const canvas = document.getElementById('whiteboard');
             canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
@@ -1526,24 +1519,43 @@
             }
         }
 
-        function toggleChat() { document.getElementById('chat-panel').classList.toggle('hidden'); }
+        function toggleChat() { 
+            const cp = document.getElementById('chat-panel');
+            cp.classList.toggle('hidden'); 
+            if (window.innerWidth < 1024) {
+                cp.style.display = cp.classList.contains('hidden') ? 'none' : 'flex';
+                cp.style.position = 'fixed';
+                cp.style.top = '0';
+                cp.style.left = '0';
+                cp.style.width = '100vw';
+                cp.style.height = '100vh';
+                cp.style.zIndex = '2000';
+            }
+        }
         
         function toggleSidebar() {
             const sb = document.getElementById('main-sidebar');
             const ov = document.getElementById('sidebar-overlay');
-            sb.classList.toggle('mobile-open');
-            ov.classList.toggle('active');
+            if (sb) sb.classList.toggle('mobile-open');
+            if (ov) ov.classList.toggle('active');
+        }
+
+        function appendMessage(msg) {
+            const m = document.getElementById('chat-messages');
+            if (!m) return;
+            const d = document.createElement('div');
+            d.className = 'message ' + (msg.from === 'ME' ? 'you' : 'them');
+            d.innerText = msg.text;
+            m.appendChild(d);
+            m.scrollTop = m.scrollHeight;
         }
 
         function sendMessage() {
             const i = document.getElementById('chat-input');
             const txt = i.value.trim();
             if(!txt) return;
-            const m = document.getElementById('chat-messages');
-            const d = document.createElement('div');
-            d.className = 'message you';
-            d.innerText = txt;
-            m.appendChild(d);
+            appendMessage({ text: txt, from: 'ME' });
+            broadcast({ type: 'chat', text: txt });
             i.value = '';
         }
 
