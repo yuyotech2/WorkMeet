@@ -288,6 +288,8 @@
                             </div>
                             
                             <div style="width: 2px; height: 28px; background: #e2e8f0; margin: 0 15px;"></div>
+                            <button class="btn btn-secondary" onclick="document.getElementById('board-image-input').click()" style="padding: 10px 20px; font-size: 0.85rem; border-radius: 14px; font-weight: 800; background: #3b82f6; color: white;">Insert Image</button>
+                            <input type="file" id="board-image-input" accept="image/*" style="display: none;" onchange="handleBoardImage(event)">
                             <button class="btn btn-secondary" onclick="clearBoard()" style="padding: 10px 20px; font-size: 0.85rem; border-radius: 14px; font-weight: 800;">Clear Canvas</button>
                         </div>
                     </div>
@@ -958,6 +960,7 @@
         let penColor = '#0f172a';
         let penSize = 4;
         let drawing = false;
+        let canvas, ctx; // GLOBAL REFERENCES
 
         async function initRealTime() {
             try {
@@ -1019,6 +1022,7 @@
 
             c.on('data', (data) => {
                 if(data.type === 'draw') drawRemote(data);
+                if(data.type === 'image') drawRemoteImage(data.data);
                 if(data.type === 'clear') remoteClear();
                 if(data.type === 'leave') removeParticipantFromGrid(data.peerId);
                 if(data.type === 'chat') appendMessage({ text: data.text, from: 'THEM' });
@@ -1417,6 +1421,7 @@
             container.innerHTML = html;
         }
         renderCalendar();
+
         function initWhiteboard() {
             canvas = document.getElementById('whiteboard'); // Assign to global canvas
             if(!canvas) return;
@@ -1430,9 +1435,10 @@
                 console.log("WHITEBOARD RE-INITIALIZED: " + canvas.width + "x" + canvas.height);
             }
             
-            const ctx = canvas.getContext('2d');
+            ctx = canvas.getContext('2d'); // Assign to global ctx
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
+            whiteboardLoaded = true;
 
             const getPos = (e) => {
                 const rect = canvas.getBoundingClientRect();
@@ -1454,17 +1460,14 @@
             
             function draw(e) {
                 if (!drawing) return;
-                const rect = canvas.getBoundingClientRect();
-                const x = (e.clientX || e.touches[0].clientX) - rect.left;
-                const y = (e.clientY || e.touches[0].clientY) - rect.top;
+                const p = getPos(e); // Use getPos for consistency
                 
-                const ctx = canvas.getContext('2d'); // Get context inside draw for safety
                 ctx.lineJoin = 'round';
                 ctx.lineCap = 'round';
                 ctx.strokeStyle = penColor;
                 ctx.lineWidth = penSize;
                 
-                ctx.lineTo(x, y);
+                ctx.lineTo(p.x, p.y); // Use p.x, p.y
                 ctx.stroke();
 
                 // BROADCAST: Normalize to 0.0 - 1.0 for cross-device accuracy
@@ -1472,13 +1475,13 @@
                     type: 'draw',
                     x1: lastX / canvas.width,
                     y1: lastY / canvas.height,
-                    x2: x / canvas.width,
-                    y2: y / canvas.height,
+                    x2: p.x / canvas.width, // Use p.x
+                    y2: p.y / canvas.height, // Use p.y
                     color: penColor,
                     size: penSize
                 });
 
-                [lastX, lastY] = [x, y];
+                [lastX, lastY] = [p.x, p.y]; // Update lastX, lastY with p.x, p.y
             }
 
             canvas.onmousedown = start; canvas.onmousemove = draw; window.onmouseup = stop;
@@ -1488,8 +1491,7 @@
         }
 
         function drawRemote(data) {
-            if (!canvas) return; // Ensure canvas is initialized
-            const ctx = canvas.getContext('2d');
+            if (!canvas || !ctx) return; // Ensure canvas and ctx are initialized
             // DENORMALIZE: Convert percentages back to local pixels
             const rx1 = data.x1 * canvas.width;
             const ry1 = data.y1 * canvas.height;
@@ -1507,14 +1509,39 @@
         }
 
         function remoteClear() {
-            const canvas = document.getElementById('whiteboard');
-            if (canvas) canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
+            if (canvas && ctx) ctx.clearRect(0,0,canvas.width,canvas.height); // Use global canvas and ctx
+        }
+
+        function handleBoardImage(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const imgData = event.target.result;
+                drawRemoteImage(imgData);
+                broadcast({ type: 'image', data: imgData });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function drawRemoteImage(data) {
+            if(!canvas || !ctx) return;
+            const img = new Image();
+            img.onload = () => {
+                // Fit image to canvas while maintaining aspect ratio
+                const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+                const x = (canvas.width / 2) - (img.width / 2) * scale;
+                const y = (canvas.height / 2) - (img.height / 2) * scale;
+                ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+            };
+            img.src = data;
         }
 
         function clearBoard() {
-            const canvas = document.getElementById('whiteboard');
-            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-            broadcast({type: 'clear'});
+            if (canvas && ctx) {
+                 ctx.clearRect(0,0,canvas.width,canvas.height);
+                 broadcast({ type: 'clear' });
+            }
         }
 
         function copyLink() {
