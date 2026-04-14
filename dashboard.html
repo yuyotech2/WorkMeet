@@ -938,7 +938,7 @@
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
                         <input type="file" id="file-share-input" onchange="handleFileSelect(event)" style="display: none;">
                     </button>
-                    <input type="text" id="chat-input" placeholder="Type..." onkeypress="if(event.key === 'Enter') sendMessage()" style="flex: 1; border: none; outline: none; font-family: inherit; font-size: 0.9rem; background: transparent; color: #0f172a;" onfocus="isChatTyping = true" onblur="isChatTyping = false">
+                    <input type="text" id="chat-input" placeholder="Type..." onkeypress="if(event.key === 'Enter') sendMessage()" style="flex: 1; border: none; outline: none; font-family: inherit; font-size: 0.9rem; background: transparent; color: #0f172a;">
                 </div>
             </footer>
         </aside>
@@ -1286,7 +1286,6 @@
             }
         }
 
-        let isChatTyping = false;
         function initParticles(theme) {
             const canvas = document.getElementById('particle-canvas');
             const ctx = canvas.getContext('2d');
@@ -1309,14 +1308,7 @@
                 color: palette[Math.floor(Math.random() * palette.length)]
             }));
 
-            function draw(time) {
-                // Throttle to 30fps while typing to ensure layout stability
-                if (isChatTyping) {
-                    if (Math.round(time / 33.3) % 2 === 0) {
-                        particleInterval = requestAnimationFrame(draw);
-                        return;
-                    }
-                }
+            function draw() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 particles.forEach(p => {
                     ctx.beginPath();
