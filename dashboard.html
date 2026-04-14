@@ -303,9 +303,9 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem;">
                         <h1 style="font-weight: 800; margin: 0;">Global Schedule</h1>
                         <div style="display: flex; align-items: center; gap: 1rem;">
-                            <button class="btn-secondary" style="width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer;">‹</button>
-                            <div class="month-pill" style="background: #f1f5f9; padding: 10px 24px; border-radius: 15px; font-weight: 800; font-size: 0.9rem; color: #0f172a; border: 1px solid transparent;">MARCH 2026</div>
-                            <button class="btn-secondary" style="width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer;">›</button>
+                            <button onclick="changeMonth(-1)" class="btn-secondary" style="width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer;">‹</button>
+                            <div id="month-display" class="month-pill" style="background: #f1f5f9; padding: 10px 24px; border-radius: 15px; font-weight: 800; font-size: 0.9rem; color: #0f172a; border: 1px solid transparent;">MARCH 2026</div>
+                            <button onclick="changeMonth(1)" class="btn-secondary" style="width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer;">›</button>
                         </div>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 1.5rem;">
@@ -1385,40 +1385,83 @@
             return `${h}:${m} ${ampm}`;
         }
 
+        // --- ENHANCED CALENDAR ENGINE ---
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let activeScheduleKey = null; // Stored as 'YYYY-M-D'
+        let scheduledMeetings = {};    // Memory for all months
+
+        function changeMonth(delta) {
+            currentMonth += delta;
+            if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+            if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+            renderCalendar();
+        }
+
+        function openSchedule(key) {
+            activeScheduleKey = key;
+            const pts = key.split('-');
+            document.getElementById('selected-date').innerText = pts[2];
+            document.getElementById('schedule-subject').value = '';
+            document.getElementById('schedule-time').value = '';
+            document.getElementById('schedule-modal').style.display = 'flex';
+        }
+
         function saveSchedule() {
             const subject = document.getElementById('schedule-subject').value.trim();
             const time = document.getElementById('schedule-time').value;
-            
             if(!subject) return alert("Please enter a subject.");
             
-            const cell = document.getElementById('cal-day-' + activeScheduleDay);
-            if(cell) {
-                let bg = "#dcfce7"; let color = "#166534";
-                if(subject.toLowerCase().includes('sync')) { bg = "#dcfce7"; color = "#166534"; }
-                else if(subject.toLowerCase().includes('brainstorm')) { bg = "#e0e7ff"; color = "#3730a3"; }
-                else { bg = "#fef08a"; color = "#854d0e"; }
-
-                const entry = document.createElement('div');
-                entry.style = `margin-top: 15px; background: ${bg}; color: ${color}; padding: 8px; border-radius: 10px; font-size: 0.65rem; font-weight: 800; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);`;
-                
-                let timeHtml = time ? `<span style="opacity: 0.8; font-size: 0.55rem;">TIME: ${formatTimeAMPM(time)}</span>` : '';
-                entry.innerHTML = `<span>${subject}</span>${timeHtml}`;
-                
-                cell.appendChild(entry);
-                cell.style.position = 'relative'; 
-            }
+            if(!scheduledMeetings[activeScheduleKey]) scheduledMeetings[activeScheduleKey] = [];
+            scheduledMeetings[activeScheduleKey].push({ subject, time });
             
+            renderCalendar(); // Re-render to show new entry
             closeSchedule();
         }
 
         function renderCalendar() {
             const container = document.getElementById('calendar-days');
-            if(!container) return;
+            const monthDisplay = document.getElementById('month-display');
+            if(!container || !monthDisplay) return;
+
+            const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+            monthDisplay.innerText = `${months[currentMonth]} ${currentYear}`;
+
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
             let html = '';
-            for(let i=1; i<=31; i++) {
-                html += `<div class="calendar-day" id="cal-day-${i}" onclick="openSchedule(${i})" style="background: #f8fafc; height: 180px; border-radius: 25px; padding: 20px; transition: 0.3s; cursor: pointer; position: relative;">
-                            <span style="font-weight: 800; color: #1e293b;">${i}</span>
-                         </div>`;
+            // Previous month placeholders
+            for(let i=0; i<firstDay; i++) {
+                html += `<div style="height: 180px; opacity: 0;"></div>`;
+            }
+            
+            for(let i=1; i<=daysInMonth; i++) {
+                const key = `${currentYear}-${currentMonth}-${i}`;
+                const isToday = (i === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear());
+                const borderStyle = isToday ? 'border: 3px solid #3b82f6;' : 'border: none;';
+                
+                let meetingsHtml = '';
+                if(scheduledMeetings[key]) {
+                    scheduledMeetings[key].forEach(m => {
+                        let bg = "#dcfce7"; let color = "#166534";
+                        if(m.subject.toLowerCase().includes('sync')) { bg = "#dcfce7"; color = "#166534"; }
+                        else if(m.subject.toLowerCase().includes('brainstorm')) { bg = "#e0e7ff"; color = "#3730a3"; }
+                        else { bg = "#fef08a"; color = "#854d0e"; }
+                        
+                        meetingsHtml += `
+                            <div style="margin-top: 8px; background: ${bg}; color: ${color}; padding: 6px; border-radius: 8px; font-size: 0.6rem; font-weight: 800; display: flex; flex-direction: column; gap: 2px;">
+                                <span>${m.subject}</span>
+                                ${m.time ? `<span style="opacity: 0.7; font-size: 0.5rem;">${formatTimeAMPM(m.time)}</span>` : ''}
+                            </div>`;
+                    });
+                }
+
+                html += `
+                <div class="calendar-day" id="cal-${key}" onclick="openSchedule('${key}')" style="background: #ffffff; height: 180px; border-radius: 25px; padding: 15px; transition: 0.3s; cursor: pointer; position: relative; ${borderStyle} box-shadow: 0 4px 10px rgba(0,0,0,0.02); overflow-y: auto;">
+                    <span style="font-weight: 800; color: ${isToday ? '#3b82f6' : '#1e293b'};">${i}</span>
+                    <div style="display: flex; flex-direction: column;">${meetingsHtml}</div>
+                </div>`;
             }
             container.innerHTML = html;
         }
