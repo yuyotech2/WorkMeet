@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exo-Pulsar | The Universal Classroom Portal</title>
+    <title>Exo-Pulsar | The Universal Classroom Protocol</title>
     <meta name="description" content="Entry portal for Exo-Pulsar, the elite classroom hub for synchronized learning and professional collaboration.">
     <link rel="stylesheet" href="index.css">
 </head>
@@ -12,42 +12,116 @@
     <canvas id="stars"></canvas>
     <div class="grid-bg"></div>
 
-    <main class="portal-container">
-        <!-- LOGO HUD -->
-        <div class="logo-hud">
-            <img src="assets/logo.png" alt="Exo Logo" class="logo-image">
-            <div>
-                <span class="version-pill">v4.5 - STABLE RELEASE</span>
-            </div>
-        </div>
-
-        <!-- ENTRY PORTAL -->
-        <section class="entry-portal">
-            <h1 class="portal-title">Classroom Portal</h1>
-            <p class="portal-subtitle">Enter your room coordinates to join the session.</p>
-
-            <div class="input-group">
+    <main>
+        <section class="portal-container">
+            <!-- LOGO HUD -->
+            <div class="logo-hud">
+                <img src="assets/logo.png" alt="Exo Logo" class="logo-image">
                 <div>
-                    <label class="input-label">MISSION TARGET (ROOM NAME)</label>
-                    <input type="text" id="join-room-name" class="portal-input" placeholder="e.g. Physics 101, Marketing Sync..." autofocus>
+                    <span class="version-pill">v4.5 - STABLE RELEASE</span>
+                </div>
+            </div>
+
+            <!-- ENTRY PORTAL -->
+            <section class="entry-portal">
+                <h1 class="portal-title">Command Portal</h1>
+                <p class="portal-subtitle">Initialize your coordinates to enter the classroom hub.</p>
+
+                <div class="input-group">
+                    <div>
+                        <label class="input-label">MISSION TARGET (ROOM NAME)</label>
+                        <input type="text" id="join-room-name" class="portal-input" placeholder="e.g. Physics 101, Marketing Sync..." autofocus>
+                    </div>
+                    
+                    <div>
+                        <label class="input-label">YOUR CALLSIGN (USERNAME)</label>
+                        <input type="text" id="join-user-name" class="portal-input" placeholder="Enter your full name...">
+                    </div>
+
+                    <button class="btn-launch" onclick="launchMission()">Initiate Launch</button>
                 </div>
                 
-                <div>
-                    <label class="input-label">YOUR CALLSIGN (USERNAME)</label>
-                    <input type="text" id="join-user-name" class="portal-input" placeholder="Enter your name...">
+                <div style="margin-top: 2rem; color: var(--text-dim); font-size: 0.7rem; font-weight: 800; letter-spacing: 1px;">
+                    SCROLL DOWN TO VIEW PROTOCOL SPECS
                 </div>
+            </section>
+        </section>
 
-                <button class="btn-launch" onclick="launchMission()">Blast Off 🚀</button>
+        <!-- FEATURE SHOWCASE (THE VISION SCROLL) -->
+        <section class="features-grid">
+            <div class="f-card">
+                <span class="f-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                </span>
+                <h3>Neural Video Architecture</h3>
+                <p>360p optimized streams designed for maximum stability on low-bandwidth school networks. Crystal clear focus without the lag.</p>
+            </div>
+            <div class="f-card">
+                <span class="f-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.5 1.5"></path></svg>
+                </span>
+                <h3>Synchronized Ink Engine</h3>
+                <p>A zero-latency whiteboard for real-time collaboration. Share diagrams and annotate images with pixel-perfect accuracy on all devices.</p>
+            </div>
+            <div class="f-card">
+                <span class="f-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                </span>
+                <h3>Global Academic Calendar</h3>
+                <p>Track your sessions and deadlines with the integrated schedule manager. One click to plan, one click to join.</p>
+            </div>
+            <div class="f-card">
+                <span class="f-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                </span>
+                <h3>Secure File Vault</h3>
+                <p>Share and preview sensitive materials instantly. All transfers are restricted to the live session for maximum security.</p>
             </div>
         </section>
 
-        <footer class="portal-footer">
-            &copy; 2026 EXO-PULSAR COMMAND. READY FOR DEPLOYMENT.
+        <!-- FULL PROTOCOL MANIFEST (THE VISION COMPLETE) -->
+        <section class="protocol-manifest">
+            <h2 class="manifest-title">SYSTEM_CAPABILITIES_MANIFEST</h2>
+            
+            <div class="manifest-row">
+                <div class="manifest-tag">[CORE]</div>
+                <div class="manifest-content">
+                    <h4>NEURAL_VIDEO_STREAMING</h4>
+                    <p>Proprietary packet-shredding algorithm optimized for 360p/720p transition. Maintains stable 24fps link on unmetered educational subnets.</p>
+                </div>
+            </div>
+
+            <div class="manifest-row">
+                <div class="manifest-tag">[SYNC]</div>
+                <div class="manifest-content">
+                    <h4>COLLABORATIVE_WHITEBOARD_v4</h4>
+                    <p>Vector-based ink synchronization across N-participants. Image injection capabilities with 100% layer persistence across sessions.</p>
+                </div>
+            </div>
+
+            <div class="manifest-row">
+                <div class="manifest-tag">[ACAD]</div>
+                <div class="manifest-content">
+                    <h4>GLOBAL_SCHEDULE_INTEGRATION</h4>
+                    <p>Bi-directional calendar binding. Automated session creation with decentralized Peer-ID rotation for private meeting slots.</p>
+                </div>
+            </div>
+
+            <div class="manifest-row">
+                <div class="manifest-tag">[SEC]</div>
+                <div class="manifest-content">
+                    <h4>VAULT_FILE_TRANSFER</h4>
+                    <p>End-to-End browser-side encryption (E2EE). Ephemeral file previewing with automatic cache-wipe on session termination.</p>
+                </div>
+            </div>
+        </section>
+
+        <footer style="padding: 4rem; text-align: center; color: var(--text-dim); font-size: 0.8rem; font-weight: 600; background: #020617;">
+            EXO-PULSAR COMMAND // COORDINATED INTELLIGENCE // 2026
         </footer>
     </main>
 
     <script>
-        // --- STAR FIELD ENGINE ---
         const canvas = document.getElementById('stars');
         const ctx = canvas.getContext('2d');
         let stars = [];
@@ -62,56 +136,39 @@
                 this.x = Math.random() * canvas.width;
                 this.y = Math.random() * canvas.height;
                 this.size = Math.random() * 2;
-                this.speed = Math.random() * 0.5 + 0.1;
+                this.speed = Math.random() * 0.3 + 0.05;
             }
             update() {
                 this.y += this.speed;
-                if (this.y > canvas.height) {
-                    this.y = 0;
-                    this.x = Math.random() * canvas.width;
-                }
+                if (this.y > canvas.height) { this.y = 0; this.x = Math.random() * canvas.width; }
             }
             draw() {
                 ctx.fillStyle = 'rgba(255, 255, 255, ' + (Math.random() * 0.5 + 0.5) + ')';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
             }
         }
 
         function initStars() {
             stars = [];
-            for (let i = 0; i < 200; i++) {
-                stars.push(new Star());
-            }
+            for (let i = 0; i < 200; i++) stars.push(new Star());
         }
 
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            stars.forEach(s => {
-                s.update();
-                s.draw();
-            });
+            stars.forEach(s => { s.update(); s.draw(); });
             requestAnimationFrame(animate);
         }
 
         window.addEventListener('resize', () => { resize(); initStars(); });
-        resize();
-        initStars();
-        animate();
+        resize(); initStars(); animate();
 
-        // --- LAUNCH LOGIC ---
         function launchMission() {
             const room = document.getElementById('join-room-name').value || 'Private Room';
             const user = document.getElementById('join-user-name').value || 'Guest';
-            
-            // Save user name locally for the dashboard to pick up
             localStorage.setItem('exo_username', user);
-            
             window.location.href = `dashboard.html?room=${encodeURIComponent(room)}`;
         }
 
-        // Enter key support
         document.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') launchMission();
         });

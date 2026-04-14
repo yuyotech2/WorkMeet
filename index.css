@@ -212,3 +212,63 @@ canvas#stars {
     z-index: 1;
     pointer-events: none;
 }
+
+/* --- VISION MANIFEST STYLES --- */
+.protocol-manifest {
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--glass-border);
+    padding: 6rem 2rem;
+    max-width: 1000px;
+    margin: 4rem auto 0 auto;
+    border-radius: 40px 40px 0 0;
+}
+
+.manifest-title {
+    font-size: 0.8rem;
+    font-weight: 900;
+    letter-spacing: 4px;
+    color: var(--primary);
+    margin-bottom: 4rem;
+    text-align: center;
+}
+
+.manifest-row {
+    display: flex;
+    gap: 3rem;
+    padding: 2.5rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    transition: all 0.3s;
+}
+
+.manifest-row:hover {
+    padding-left: 20px;
+    background: rgba(255,255,255,0.02);
+}
+
+.manifest-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 800;
+    color: var(--text-dim);
+    font-size: 0.7rem;
+    width: 60px;
+    padding-top: 5px;
+}
+
+.manifest-content h4 {
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    letter-spacing: 1px;
+}
+
+.manifest-content p {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+    .manifest-row { flex-direction: column; gap: 1rem; }
+    .entry-portal { padding: 2rem; }
+}
