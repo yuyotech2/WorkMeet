@@ -558,10 +558,14 @@
                         <!-- Integrations -->
                         <div style="margin-bottom: 2.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 2.5rem;">
                             <h3 style="font-size: 1.2rem; color: #0f172a; margin-top: 0; margin-bottom: 1.5rem;">App Integrations</h3>
-                            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                                <button style="padding: 12px 24px; border-radius: 12px; border: 2px solid #e2e8f0; background: #ffffff; cursor: pointer; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 10px;"><img src="https://upload.wikimedia.org/wikipedia/commons/d/d5/Slack_icon_2019.svg" width="20"> Connect Slack</button>
-                                <button style="padding: 12px 24px; border-radius: 12px; border: 2px solid #e2e8f0; background: #ffffff; cursor: pointer; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 10px;"><img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/Google_Calendar_icon_%20_%282020%29.svg" width="20"> Sync Google Calendar</button>
-                                <button style="padding: 12px 24px; border-radius: 12px; border: 2px solid #e2e8f0; background: #ffffff; cursor: pointer; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 10px;">Link Zapier Architecture</button>
+                            <div style="max-width: 400px;">
+                                <button onclick="syncGoogleCalendar(this)" style="width: 100%; padding: 15px 20px; border-radius: 12px; border: 2px solid #e2e8f0; background: #ffffff; cursor: pointer; font-weight: 700; color: #0f172a; display: flex; align-items: center; justify-content: center; gap: 12px; transition: 0.3s;" onmouseover="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 10px 20px rgba(0,0,0,0.05)'" onmouseout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg" width="22"> Sync Google Calendar
+                                </button>
+                                <p style="font-size: 0.75rem; color: #64748b; margin-top: 10px; font-weight: 600; line-height: 1.4;">
+                                    Connect your Google Calendar to automatically import and sync your 
+                                    <strong>Global Schedule</strong> events to all your devices.
+                                </p>
                             </div>
                         </div>
 
@@ -1385,11 +1389,41 @@
             return `${h}:${m} ${ampm}`;
         }
 
+        // --- MEMORY VAULT ENGINE (LOCALSTORAGE) ---
+        const MEMORY_KEY = 'exo_pulsar_vault';
+        
+        function loadFromVault() {
+            const vault = localStorage.getItem(MEMORY_KEY);
+            if(vault) {
+                const data = JSON.parse(vault);
+                scheduledMeetings = data.meetings || {};
+                
+                // Load Whiteboard if exists
+                if(data.whiteboard) {
+                    const img = new Image();
+                    img.onload = () => {
+                        if(canvas && ctx) ctx.drawImage(img, 0, 0);
+                    };
+                    img.src = data.whiteboard;
+                }
+            }
+        }
+
+        function saveToVault() {
+            if(!canvas) return;
+            const vaultData = {
+                meetings: scheduledMeetings,
+                whiteboard: canvas.toDataURL(),
+                timestamp: Date.now()
+            };
+            localStorage.setItem(MEMORY_KEY, JSON.stringify(vaultData));
+        }
+
         // --- ENHANCED CALENDAR ENGINE ---
         let currentMonth = new Date().getMonth();
         let currentYear = new Date().getFullYear();
-        let activeScheduleKey = null; // Stored as 'YYYY-M-D'
-        let scheduledMeetings = {};    // Memory for all months
+        let activeScheduleKey = null; 
+        let scheduledMeetings = {};    
 
         function changeMonth(delta) {
             currentMonth += delta;
@@ -1415,7 +1449,8 @@
             if(!scheduledMeetings[activeScheduleKey]) scheduledMeetings[activeScheduleKey] = [];
             scheduledMeetings[activeScheduleKey].push({ subject, time });
             
-            renderCalendar(); // Re-render to show new entry
+            saveToVault(); // Burn to memory
+            renderCalendar(); 
             closeSchedule();
         }
 
@@ -1431,7 +1466,6 @@
             const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
             let html = '';
-            // Previous month placeholders
             for(let i=0; i<firstDay; i++) {
                 html += `<div style="height: 180px; opacity: 0;"></div>`;
             }
@@ -1465,6 +1499,42 @@
             }
             container.innerHTML = html;
         }
+
+        // --- CLOUD SYNC ENGINE (SIMULATED) ---
+        function syncGoogleCalendar(button) {
+            const originalText = button.innerHTML;
+            button.disabled = true;
+            button.style.opacity = "0.7";
+            button.innerHTML = `<div class="live-pulse" style="width: 12px; height: 12px; margin: 0; background: #3b82f6;"></div> Connecting...`;
+            
+            setTimeout(() => {
+                button.innerHTML = `<span style="color: #166534;">🎉 Authenticated!</span>`;
+                
+                const today = new Date();
+                const d1 = new Date(); d1.setDate(today.getDate() + 1);
+                const d2 = new Date(); d2.setDate(today.getDate() + 2);
+                
+                const key1 = `${d1.getFullYear()}-${d1.getMonth()}-${d1.getDate()}`;
+                const key2 = `${d2.getFullYear()}-${d2.getMonth()}-${d2.getDate()}`;
+                
+                if(!scheduledMeetings[key1]) scheduledMeetings[key1] = [];
+                scheduledMeetings[key1].push({ subject: "Google Sync: Q2 Review", time: "10:00" });
+                
+                if(!scheduledMeetings[key2]) scheduledMeetings[key2] = [];
+                scheduledMeetings[key2].push({ subject: "Google Sync: API Handshake", time: "14:30" });
+                
+                saveToVault(); // Burn synced data to memory
+                renderCalendar(); 
+                
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                    button.style.opacity = "1";
+                    alert("Google Calendar successfully synced! Events added and saved to your workspace.");
+                }, 1500);
+            }, 2000);
+        }
+
         renderCalendar();
 
         function initWhiteboard() {
@@ -1501,7 +1571,10 @@
                 ctx.beginPath();
                 ctx.moveTo(lastX, lastY);
             };
-            const stop = () => { drawing = false; }; // No need for ctx.beginPath() here, it's done in start/draw
+            const stop = () => { 
+                drawing = false; 
+                saveToVault(); // Persistence after every stroke
+            };
             
             function draw(e) {
                 if (!drawing) return;
@@ -1712,6 +1785,8 @@
         
         // --- RELAUNCH CORE ENGINES ---
         window.addEventListener('load', () => {
+            loadFromVault();
+            renderCalendar();
             initWhiteboard();
             initParticles('Space');
             updateClock();
