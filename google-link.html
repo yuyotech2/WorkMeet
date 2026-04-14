@@ -8,157 +8,200 @@
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Roboto', arial, sans-serif;
-            background: #131314;
+            font-family: 'Google Sans', 'Roboto', arial, sans-serif;
+            background: #131313;
             display: flex;
             align-items: center;
             justify-content: center;
             height: 100vh;
             color: #e3e3e3;
+            overflow: hidden;
         }
-        .login-card {
-            background: #1e1f20;
+        .container {
             width: 100%;
-            max-width: 1024px;
-            min-height: 400px;
-            padding: 48px;
-            border-radius: 28px;
+            max-width: 1040px;
             display: flex;
-            gap: 48px;
+            padding: 48px;
+            gap: 100px;
         }
-        .left-col {
+        .left-panel {
             flex: 1;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
         }
-        .right-col {
-            flex: 1.2;
+        .right-panel {
+            width: 450px;
             padding-top: 10px;
         }
-        .g-logo {
-            width: 32px;
+        .google-g {
+            width: 48px;
+            height: 48px;
             margin-bottom: 24px;
         }
         h1 {
-            font-size: 36px;
+            font-size: 48px;
             font-weight: 400;
-            margin: 0 0 12px 0;
+            margin: 0;
+            color: #e3e3e3;
+            line-height: 1.25;
+        }
+        .account-list {
+            border-top: 1px solid #444746;
         }
         .account-item {
             display: flex;
             align-items: center;
-            padding: 16px 0;
+            padding: 20px 0;
             border-bottom: 1px solid #444746;
             cursor: pointer;
             transition: background 0.2s;
+            position: relative;
         }
         .account-item:hover {
             background: rgba(255,255,255,0.04);
         }
-        .avatar {
-            width: 32px;
-            height: 32px;
-            background: #c51162;
+        .avatar-circle {
+            width: 40px;
+            height: 40px;
+            background: #b0003a;
             color: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 500;
-            margin-right: 12px;
+            font-size: 18px;
+            margin-right: 16px;
         }
-        .acc-info {
-            flex-grow: 1;
+        .info {
+            flex: 1;
         }
-        .acc-name {
-            font-size: 14px;
+        .name {
+            font-size: 16px;
             font-weight: 500;
-            color: #e3e3e3;
+            margin-bottom: 2px;
         }
-        .acc-email {
-            font-size: 12px;
+        .email {
+            font-size: 14px;
             color: #c4c7c5;
         }
-        .signed-out {
-            font-size: 12px;
+        .status {
+            font-size: 14px;
             color: #c4c7c5;
         }
-        .other-action {
+        .other-link {
             display: flex;
             align-items: center;
-            padding: 16px 0;
+            padding: 20px 0;
             cursor: pointer;
             color: #e3e3e3;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 500;
+            transition: 0.2s;
         }
-        .icon {
-            margin-right: 12px;
-            width: 20px;
-            display: flex;
-            justify-content: center;
+        .other-link:hover {
+            background: rgba(255,255,255,0.04);
+        }
+        .other-link svg {
+            margin-right: 16px;
+            fill: #c4c7c5;
+        }
+        .divider {
+            height: 1px;
+            background: #444746;
+            margin: 4px 0;
         }
 
-        .loading-overlay {
+        /* Verification Animation */
+        #loading-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: #131314;
+            background: #131313;
             display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 100;
+            z-index: 1000;
         }
-        .spinner {
-            width: 40px; height: 40px;
-            border: 3px solid rgba(255,255,255,0.1);
-            border-top: 3px solid #7cacf8;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+        .loader-bar {
+            width: 300px;
+            height: 4px;
+            background: #444746;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 20px;
         }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .loader-progress {
+            width: 0%;
+            height: 100%;
+            background: #8ab4f8;
+            animation: load 2.5s forwards;
+        }
+        @keyframes load {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
     </style>
 </head>
 <body>
-    <div class="login-card">
-        <div class="left-col">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_Logo.svg" class="g-logo">
+    <div class="container">
+        <div class="left-panel">
+            <svg class="google-g" viewBox="0 0 48 48">
+                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                <path fill="none" d="M0 0h48v48H0z"></path>
+            </svg>
             <h1>Choose an account</h1>
         </div>
-        <div class="right-col">
-            <div class="account-item" onclick="confirmLink()">
-                <div class="avatar">L</div>
-                <div class="acc-info">
-                    <div class="acc-name">Leonardo Lozano Andrade</div>
-                    <div class="acc-email">trisanlo29@gmail.com</div>
+        <div class="right-panel">
+            <div class="account-list">
+                <div class="account-item" onclick="startBridge()">
+                    <div class="avatar-circle">L</div>
+                    <div class="info">
+                        <div class="name">Leonardo Lozano Andrade</div>
+                        <div class="email">trisanlo29@gmail.com</div>
+                    </div>
+                    <div class="status">Signed out</div>
                 </div>
-                <div class="signed-out">Signed out</div>
-            </div>
-            
-            <div class="other-action">
-                <div class="icon">👤</div>
-                Use another account
-            </div>
-            
-            <div class="other-action" style="border-top: 1px solid #444746; margin-top: 4px; padding-top: 20px;">
-                <div class="icon">👤-</div>
-                Remove an account
+                
+                <div class="other-link">
+                    <svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"></path></svg>
+                    Use another account
+                </div>
+                
+                <div class="divider"></div>
+                
+                <div class="other-link">
+                    <svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"></path></svg>
+                    Remove an account
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="loading-overlay" id="loader">
-        <div class="spinner"></div>
-        <p style="margin-top: 20px; font-size: 14px; color: #c4c7c5;">Linking to Exo Pulsar...</p>
+    <div id="loading-screen">
+        <svg class="google-g" viewBox="0 0 48 48" style="width: 40px; height: 40px;">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+        </svg>
+        <div class="loader-bar">
+            <div class="loader-progress"></div>
+        </div>
+        <p style="color: #c4c7c5; font-size: 14px; margin-top: 20px;">Securing your workspace connection...</p>
     </div>
 
     <script>
-        function confirmLink() {
-            document.getElementById('loader').style.display = 'flex';
+        function startBridge() {
+            document.getElementById('loading-screen').style.display = 'flex';
             setTimeout(() => {
                 window.location.href = 'dashboard.html?sync=success';
-            }, 2000);
+            }, 2500);
         }
     </script>
 </body>

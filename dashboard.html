@@ -562,9 +562,27 @@
                         <div style="margin-bottom: 2.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 2.5rem;">
                             <h3 style="font-size: 1.2rem; color: #0f172a; margin-top: 0; margin-bottom: 1.5rem;">App Integrations</h3>
                             <div style="max-width: 400px;">
-                                <button onclick="syncGoogleCalendar(this)" style="width: 100%; padding: 15px 20px; border-radius: 12px; border: 2px solid #e2e8f0; background: #ffffff; cursor: pointer; font-weight: 700; color: #0f172a; display: flex; align-items: center; justify-content: center; gap: 12px; transition: 0.3s;" onmouseover="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 10px 20px rgba(0,0,0,0.05)'" onmouseout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'">
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg" width="22"> Link Google Account
-                                </button>
+                                <div style="width: 100%; border-radius: 12px; border: 2px solid #e2e8f0; background: #ffffff; padding: 15px; display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                                    <p style="font-size: 0.8rem; font-weight: 800; color: #0f172a; margin: 0;">Official Google Sync</p>
+                                    <div id="g_id_onload"
+                                         data-client_id="YOUR_GOOGLE_CLIENT_ID"
+                                         data-context="signin"
+                                         data-ux_mode="popup"
+                                         data-callback="handleCredentialResponse"
+                                         data-auto_prompt="false">
+                                    </div>
+                                    <div class="g_id_signin"
+                                         data-type="standard"
+                                         data-shape="rectangular"
+                                         data-theme="outline"
+                                         data-text="signin_with"
+                                         data-size="large"
+                                         data-logo_alignment="left">
+                                    </div>
+                                    <button onclick="updateClientID()" style="font-size: 0.65rem; color: #3b82f6; background: none; border: none; cursor: pointer; text-decoration: underline; font-weight: 700;">
+                                        Enter Security Key (Client ID)
+                                    </button>
+                                </div>
                                 <button onclick="clearExoRegistry()" style="width: 100%; margin-top: 10px; padding: 10px; border-radius: 12px; border: 1px solid #fee2e2; background: #fff1f1; cursor: pointer; font-weight: 700; color: #991b1b; font-size: 0.7rem;">
                                     Wipe Workspace Cache
                                 </button>
