@@ -1463,10 +1463,25 @@
             if(!subject) return alert("Please enter a subject.");
             
             if(!scheduledMeetings[activeScheduleKey]) scheduledMeetings[activeScheduleKey] = [];
-            scheduledMeetings[activeScheduleKey].push({ subject, time });
+            const meeting = {
+                subject: subject,
+                time: time
+            };
             
-            saveToVault(); // Burn to memory
-            renderCalendar(); 
+            scheduledMeetings[activeScheduleKey].push(meeting);
+            
+            // --- TRANSPARENT SYNC REVOLUTION ---
+            if (confirm("Meeting saved to Exo-Pulsar Vault! Do you want to sync this to your ACTUAL Google Calendar on your phone/email?")) {
+                const [year, month, day] = activeScheduleKey.split('-');
+                const startDateStr = `${year}${String(Number(month)+1).padStart(2,'0')}${day.padStart(2,'0')}T${time.replace(':','') }00Z`;
+                const endDateStr = `${year}${String(Number(month)+1).padStart(2,'0')}${day.padStart(2,'0')}T${String(Number(time.split(':')[0])+1).padStart(2,'0')}${time.split(':')[1]}00Z`;
+                
+                const calUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(subject)}&dates=${startDateStr}/${endDateStr}&details=Added via Exo-Pulsar Nexus Dashboard`;
+                window.open(calUrl, '_blank');
+            }
+            
+            saveToVault();
+            renderCalendar();
             closeSchedule();
         }
 
