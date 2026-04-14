@@ -147,8 +147,8 @@ canvas#stars {
     transition: all 0.3s;
     outline: none;
     position: relative;
-    z-index: 1000;
-    pointer-events: all;
+    z-index: 99999999 !important;
+    pointer-events: all !important;
 }
 
 .portal-input:focus {

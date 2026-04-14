@@ -27,13 +27,13 @@
                 <h1 class="portal-title">Command Portal</h1>
                 <p class="portal-subtitle">Initialize your coordinates to enter the classroom hub.</p>
 
-                <div class="input-group">
+                <div class="input-group" style="position: relative; z-index: 2000000000 !important; pointer-events: all !important;" onclick="document.getElementById('join-room-name').focus()">
                     <div>
                         <label class="input-label">MISSION TARGET (ROOM NAME)</label>
-                        <input type="text" id="join-room-name" class="portal-input" placeholder="e.g. Physics 101, Marketing Sync..." autofocus>
+                        <input type="text" id="join-room-name" class="portal-input" placeholder="e.g. Physics 101, Marketing Sync...">
                     </div>
                     
-                    <div>
+                    <div style="margin-top: 1.5rem;" onclick="event.stopPropagation(); document.getElementById('join-user-name').focus()">
                         <label class="input-label">YOUR CALLSIGN (USERNAME)</label>
                         <input type="text" id="join-user-name" class="portal-input" placeholder="Enter your full name...">
                     </div>
