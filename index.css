@@ -87,6 +87,7 @@ canvas#stars {
     box-shadow: 0 40px 100px rgba(0,0,0,0.5);
     animation: portalLaunch 1.2s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
+    z-index: 50;
 }
 
 .entry-portal::before {
@@ -100,6 +101,7 @@ canvas#stars {
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
+    pointer-events: none;
 }
 
 .portal-title {
@@ -196,6 +198,7 @@ canvas#stars {
     font-size: 0.8rem;
     font-weight: 600;
     letter-spacing: 1px;
+    pointer-events: none;
 }
 
 /* --- ANIMATIONS --- */
