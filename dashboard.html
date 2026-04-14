@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Exo Pulsar | Workspace Nexus</title>
-    <!-- Google API Client -->
+    <!-- GAPI Professional Suite -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js"></script>
     <link rel="stylesheet" href="dashboard.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400..800&family=Inter:wght@400..800&family=JetBrains+Mono:wght@400..800&family=Rubik:wght@400..800&family=Manrope:wght@400..800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
@@ -561,7 +562,7 @@
                         <div style="margin-bottom: 2.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 2.5rem;">
                             <h3 style="font-size: 1.2rem; color: #0f172a; margin-top: 0; margin-bottom: 1.5rem;">App Integrations</h3>
                             <div style="max-width: 400px;">
-                                <button onclick="window.location.href='google-link.html'" style="width: 100%; padding: 15px 20px; border-radius: 12px; border: 2px solid #e2e8f0; background: #ffffff; cursor: pointer; font-weight: 700; color: #0f172a; display: flex; align-items: center; justify-content: center; gap: 12px; transition: 0.3s;" onmouseover="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 10px 20px rgba(0,0,0,0.05)'" onmouseout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'">
+                                <button onclick="syncGoogleCalendar(this)" style="width: 100%; padding: 15px 20px; border-radius: 12px; border: 2px solid #e2e8f0; background: #ffffff; cursor: pointer; font-weight: 700; color: #0f172a; display: flex; align-items: center; justify-content: center; gap: 12px; transition: 0.3s;" onmouseover="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 10px 20px rgba(0,0,0,0.05)'" onmouseout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'">
                                     <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg" width="22"> Link Google Account
                                 </button>
                                 <button onclick="clearExoRegistry()" style="width: 100%; margin-top: 10px; padding: 10px; border-radius: 12px; border: 1px solid #fee2e2; background: #fff1f1; cursor: pointer; font-weight: 700; color: #991b1b; font-size: 0.7rem;">
@@ -1516,51 +1517,47 @@
             container.innerHTML = html;
         }
 
-        // --- GOOGLE API CONFIGURATION ---
-        const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID_HERE'; // PASTE YOUR CLIENT ID HERE
+        // --- GOOGLE API CONFIGURATION (PRODUCTION READY) ---
+        let GOOGLE_CLIENT_ID = localStorage.getItem('exo_g_client_id') || ''; 
         let tokenClient;
-        let gapiInited = false;
-        let gisInited = false;
 
-        function gapiLoaded() { gapiInited = true; }
-        function gisLoaded() { gisInited = true; }
-
-        function syncGoogleCalendar(button) {
-            if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID_HERE') {
-                return alert("GOOGLE KEY REQUIRED: Please paste your Client ID from Google Cloud Console into the code (Line ~1400) to activate real syncing!");
+        function updateClientID() {
+            const newID = prompt("PLEASE PASTE YOUR GOOGLE CLIENT ID:\n(To get one: Visit https://console.cloud.google.com/ , create an OAuth 2.0 Client ID for your project, then paste it here.)", GOOGLE_CLIENT_ID);
+            if(newID) {
+                GOOGLE_CLIENT_ID = newID;
+                localStorage.setItem('exo_g_client_id', newID);
+                alert("Key Integrated. Attempting Direct Link...");
+                syncGoogleCalendar();
             }
+        }
 
-            console.log("SYNC: Requesting Auth Token...");
-            const originalText = button.innerHTML;
-            button.disabled = true;
-            button.innerHTML = `Authorizing...`;
+        async function syncGoogleCalendar(button) {
+            if (!GOOGLE_CLIENT_ID) { return updateClientID(); }
+
+            console.log("GAPI: Initializing Production Handshake...");
+            const btn = button || document.querySelector('[onclick*="google-link"]');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `Linking Account...`;
 
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: GOOGLE_CLIENT_ID,
                 scope: 'https://www.googleapis.com/auth/calendar.events.readonly',
                 callback: async (response) => {
-                    if (response.error !== undefined) {
-                        button.disabled = false;
-                        button.innerHTML = originalText;
-                        throw (response);
-                    }
-                    console.log("SYNC: Access Granted. Fetching Calendar...");
-                    button.innerHTML = `Syncing Events...`;
+                    if (response.error !== undefined) { throw (response); }
+                    console.log("GAPI: Success. Pulling Live Data...");
+                    btn.innerHTML = `Retrieving Schedule...`;
                     await fetchGoogleEvents(response.access_token);
-                    
-                    button.innerHTML = `<span style="color: #166534;">🎉 Synced!</span>`;
-                    setTimeout(() => {
-                        button.disabled = false;
-                        button.innerHTML = originalText;
-                    }, 2000);
+                    btn.innerHTML = `<span style="color: #166534;">🎉 Account Synchronized</span>`;
+                    setTimeout(() => { btn.disabled = false; btn.innerHTML = originalText; }, 3000);
                 },
             });
-
             tokenClient.requestAccessToken({prompt: 'consent'});
         }
 
         async function fetchGoogleEvents(token) {
             try {
+                // FETCHING ACTUAL GOOGLE CALENDAR ENDPOINT
                 const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=' + new Date().toISOString(), {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
@@ -1573,23 +1570,18 @@
                         const key = `${dateObj.getFullYear()}-${dateObj.getMonth()}-${dateObj.getDate()}`;
                         
                         if(!scheduledMeetings[key]) scheduledMeetings[key] = [];
-                        
-                        // Check for duplicates
-                        const exists = scheduledMeetings[key].some(m => m.subject === ev.summary);
+                        const exists = scheduledMeetings[key].some(m => m.subject.includes(ev.summary));
                         if(!exists) {
                             scheduledMeetings[key].push({
                                 subject: "G-CAL: " + ev.summary,
-                                time: dateObj.toTimeString().split(' ')[0].substring(0,5)
+                                time: dateObj.getHours().toString().padStart(2,'0') + ":" + dateObj.getMinutes().toString().padStart(2,'0')
                             });
                         }
                     });
                     saveToVault();
                     renderCalendar();
                 }
-            } catch (err) {
-                console.error("SYNC ERROR:", err);
-                alert("Failed to fetch events. check console for details.");
-            }
+            } catch (err) { console.error("CALENDAR FETCH ERROR:", err); }
         }
 
         function clearExoRegistry() {
