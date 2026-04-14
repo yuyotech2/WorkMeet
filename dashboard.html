@@ -10,374 +10,383 @@
     <style>
         :root {
             --neon-blue: #3b82f6;
-            --glass-bg: rgba(255, 255, 255, 0.7);
-            --dark-bg: #0f172a;
+            --neon-glow: rgba(59, 130, 246, 0.4);
+            --glass-bg: rgba(15, 23, 42, 0.85);
+            --border-glow: rgba(255, 255, 255, 0.1);
         }
 
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             font-family: 'Outfit', sans-serif;
-            background: #f8fafc;
+            background: #020617;
             overflow: hidden;
-            color: #1e293b;
+            color: #f8fafc;
         }
 
         #particle-bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; background: #0f172a;
+            z-index: -1;
+            background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
         }
 
-        .main-container {
+        .main-nexus {
             display: flex; width: 100vw; height: 100vh;
         }
 
-        /* Sidebar */
+        /* Side Navigation */
         .sidebar {
-            width: 80px; background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(10px); display: flex; flex-direction: column;
-            align-items: center; padding: 20px 0; gap: 25px; border-right: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .side-icon {
-            width: 45px; height: 45px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: 0.3s; color: rgba(255,255,255,0.5);
-        }
-
-        .side-icon.active { background: #3b82f6; color: white; box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
-        .side-icon:hover { color: white; background: rgba(255,255,255,0.1); }
-
-        /* Content Area */
-        .content-area { flex: 1; position: relative; display: flex; flex-direction: column; overflow: hidden; }
-
-        .top-bar {
-            height: 70px; display: flex; align-items: center; justify-content: space-between;
-            padding: 0 30px; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px);
-            border-bottom: 1px solid #e2e8f0; z-index: 10;
-        }
-
-        /* Whiteboard */
-        #whiteboard-container { flex: 1; position: relative; background: #ffffff; }
-        #main-canvas { cursor: crosshair; }
-
-        /* Calendar Sidebar (Hidden as Panel) */
-        .calendar-panel {
-            width: 450px; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px);
-            border-left: 1px solid #e2e8f0; height: 100%; display: flex; flex-direction: column;
-            position: absolute; right: -450px; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 100;
-        }
-        .calendar-panel.open { right: 0; box-shadow: -20px 0 50px rgba(0,0,0,0.1); }
-
-        .cal-header { padding: 30px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
-        #calendar-grid { flex: 1; overflow-y: auto; padding: 20px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
-        
-        .calendar-day {
-            aspect-ratio: 1; border-radius: 12px; border: 1px solid #f1f5f9;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            cursor: pointer; position: relative; transition: 0.2s; background: white;
-        }
-        .calendar-day:hover { background: #f8fafc; border-color: #3b82f6; }
-        .calendar-day.today { background: #eff6ff; border: 2px solid #3b82f6; font-weight: 800; }
-        
-        .meeting-dot {
-            width: 6px; height: 6px; background: #3b82f6; border-radius: 50%;
-            position: absolute; bottom: 8px;
-        }
-
-        /* Schedule Modal */
-        #schedule-modal {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9);
-            background: white; width: 400px; padding: 30px; border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); z-index: 1000;
-            display: none; opacity: 0; transition: 0.3s;
-        }
-        #schedule-modal.active { display: block; opacity: 1; transform: translate(-50%, -50%) scale(1); }
-
-        .meeting-item {
-            font-size: 0.75rem; background: #f1f5f9; padding: 6px 10px; border-radius: 8px;
-            margin-top: 5px; display: flex; align-items: center; gap: 8px;
-        }
-        .sync-btn { cursor: pointer; transition: 0.2s; }
-        .sync-btn:hover { transform: scale(1.2); }
-
-        /* Tools Overlay */
-        .tool-overlay {
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px);
-            padding: 10px 20px; border-radius: 20px; display: flex; gap: 15px;
-            border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 85px; background: var(--glass-bg);
+            backdrop-filter: blur(25px); display: flex; flex-direction: column;
+            align-items: center; padding: 25px 0; gap: 30px;
+            border-right: 1px solid var(--border-glow);
             z-index: 50;
         }
-        .tool-btn { width: 40px; height: 40px; display:flex; align-items:center; justify-content:center; color: white; cursor: pointer; border-radius: 10px; transition: 0.2s; }
-        .tool-btn:hover { background: rgba(255,255,255,0.15); }
-        .tool-btn.active { background: #3b82f6; }
+
+        .nav-item {
+            width: 50px; height: 50px; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            color: rgba(255,255,255,0.4); border: 1px solid transparent;
+            font-size: 1.4rem;
+        }
+
+        .nav-item:hover { color: white; background: rgba(255,255,255,0.05); transform: translateY(-3px); }
+        .nav-item.active { 
+            background: var(--neon-blue); color: white; 
+            box-shadow: 0 0 25px var(--neon-glow);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        /* Content Stage */
+        .stage { flex: 1; position: relative; display: flex; flex-direction: column; }
+
+        .nexus-header {
+            height: 80px; display: flex; align-items: center; justify-content: space-between;
+            padding: 0 40px; background: rgba(2, 6, 23, 0.5); backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-glow); z-index: 10;
+        }
+
+        .status-pill {
+            background: rgba(59, 130, 246, 0.1); border: 1px solid var(--neon-blue);
+            padding: 6px 16px; border-radius: 20px; font-size: 0.8rem;
+            font-weight: 700; color: var(--neon-blue); letter-spacing: 1px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .pulse { width: 8px; height: 8px; background: var(--neon-blue); border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
+
+        /* Whiteboard */
+        #whiteboard-container { flex: 1; position: relative; background: transparent; overflow: hidden; }
+        #canvas { cursor: url('https://cdn-icons-png.flaticon.com/32/588/588395.png'), auto; }
+
+        /* Calendar Sidebar */
+        .calendar-side {
+            width: 420px; background: var(--glass-bg); backdrop-filter: blur(40px);
+            border-left: 1px solid var(--border-glow); height: 100%; display: flex; flex-direction: column;
+            position: absolute; right: -420px; transition: 0.6s cubic-bezier(0.85, 0, 0.15, 1); z-index: 100;
+        }
+        .calendar-side.active { right: 0; box-shadow: -30px 0 60px rgba(0,0,0,0.5); }
+
+        .cal-head { padding: 40px; border-bottom: 1px solid var(--border-glow); }
+        .cal-grid { 
+            flex: 1; overflow-y: auto; padding: 25px; 
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px;
+        }
+        
+        .day {
+            aspect-ratio: 1; border-radius: 14px; border: 1px solid rgba(255,255,255,0.05);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; position: relative; transition: 0.3s; background: rgba(255,255,255,0.02);
+            font-size: 0.9rem; font-weight: 500;
+        }
+        .day:hover { background: rgba(59, 130, 246, 0.1); border-color: var(--neon-blue); transform: scale(1.05); }
+        .day.today { background: var(--neon-blue); border: none; font-weight: 900; box-shadow: 0 0 20px var(--neon-glow); }
+        
+        .dot { width: 5px; height: 5px; background: var(--neon-blue); border-radius: 50%; position: absolute; bottom: 8px; }
+
+        /* Meeting Modal */
+        .nexus-modal {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9);
+            background: #0f172a; border: 1px solid rgba(255,255,255,0.1); 
+            width: 440px; padding: 35px; border-radius: 30px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8); z-index: 2000;
+            display: none; opacity: 0; transition: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .nexus-modal.active { display: block; opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+        .meeting-card {
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+            padding: 15px; border-radius: 16px; margin-bottom: 15px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .google-sync-chip {
+            background: #ffffff; color: #0f172a; padding: 4px 10px; border-radius: 8px;
+            font-size: 0.65rem; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 5px;
+            transition: 0.2s;
+        }
+        .google-sync-chip:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,255,255,0.2); }
+
+        /* Tools Hub */
+        .tools-hub {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(20px);
+            padding: 12px 25px; border-radius: 25px; display: flex; gap: 20px;
+            border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            z-index: 50;
+        }
+        .tool { width: 45px; height: 45px; display:flex; align-items:center; justify-content:center; color: white; cursor: pointer; border-radius: 12px; transition: 0.3s; }
+        .tool:hover { background: rgba(255,255,255,0.1); transform: translateY(-5px); }
+        .tool.active { background: var(--neon-blue); box-shadow: 0 0 15px var(--neon-glow); }
+
+        input[type="text"], input[type="time"] {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: white; padding: 15px; border-radius: 15px; width: 100%; box-sizing: border-box;
+            outline: none; transition: 0.3s; margin-bottom: 12px;
+        }
+        input:focus { border-color: var(--neon-blue); background: rgba(255,255,255,0.08); }
+
+        .btn-launch {
+            background: var(--neon-blue); color: white; border: none; padding: 18px; border-radius: 15px;
+            font-weight: 800; cursor: pointer; width: 100%; text-transform: uppercase; letter-spacing: 2px;
+            box-shadow: 0 10px 25px var(--neon-glow); transition: 0.3s;
+        }
+        .btn-launch:hover { transform: translateY(-3px); box-shadow: 0 15px 35px var(--neon-glow); }
     </style>
 </head>
 <body>
     <div id="particle-bg"></div>
 
-    <div class="main-container">
-        <!-- Sidebar -->
+    <div class="main-nexus">
         <nav class="sidebar">
-            <div class="side-icon active" title="Whiteboard" onclick="switchTab('draw')">🎨</div>
-            <div class="side-icon" title="Global Calendar" onclick="toggleCalendar()">📅</div>
-            <div class="side-icon" title="Memory Vault" onclick="switchTab('vault')">🛡️</div>
-            <div class="side-icon" title="Clear All" onclick="clearWorkspace()" style="margin-top: auto; color: #ef4444;">🔥</div>
+            <div class="nav-item active" onclick="setMode('draw')">📁</div>
+            <div class="nav-item" onclick="toggleCalendar()">📅</div>
+            <div class="nav-item">🛡️</div>
+            <div class="nav-item" onclick="resetSystem()" style="margin-top: auto; color: #ef4444;">💀</div>
         </nav>
 
-        <section class="content-area">
-            <header class="top-bar">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <div style="width: 40px; height: 40px; background: #3b82f6; border-radius: 10px; display:flex; align-items:center; justify-content:center; color: white; font-weight: 900;">EP</div>
-                    <h2 style="font-weight: 700; letter-spacing: -1px; margin: 0;">EXO-PULSAR <span style="font-weight: 300; color: #64748b;">NEXUS</span></h2>
+        <main class="stage">
+            <header class="nexus-header">
+                <div>
+                    <h1 style="margin: 0; font-weight: 800; letter-spacing: -2px; font-size: 1.8rem;">EXO PULSAR <span style="font-weight: 200; color: #64748b;">NEXUS</span></h1>
                 </div>
-                <div id="digital-clock" style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #64748b; background: #f1f5f9; padding: 6px 15px; border-radius: 20px;">00:00:00</div>
+                <div style="display: flex; gap: 20px; align-items: center;">
+                    <div class="status-pill"><div class="pulse"></div> NEURAL LINK ACTIVE</div>
+                    <div id="nexus-clock" style="font-family: 'JetBrains Mono'; font-weight: 500; font-size: 1.1rem;">00:00:00</div>
+                </div>
             </header>
 
             <div id="whiteboard-container">
-                <canvas id="main-canvas"></canvas>
+                <canvas id="canvas"></canvas>
                 
-                <div class="tool-overlay">
-                    <div class="tool-btn active" id="pen-tool" onclick="setTool('pen')">🖌️</div>
-                    <div class="tool-btn" id="eraser-tool" onclick="setTool('eraser')">🧽</div>
-                    <div class="tool-btn" onclick="clearCanvas()">🗑️</div>
-                    <input type="color" id="color-picker" style="width: 30px; height: 40px; padding: 0; border: none; background: none; cursor: pointer;" value="#3b82f6">
+                <div class="tools-hub">
+                    <div class="tool active" id="tool-pen" onclick="switchTool('pen')">🖊️</div>
+                    <div class="tool" id="tool-eraser" onclick="switchTool('eraser')">🧼</div>
+                    <div class="tool" onclick="wipeCanvas()">🔋</div>
+                    <input type="color" id="brush-color" value="#3b82f6" style="width: 35px; height: 35px; border-radius: 10px; border: none; background: none; cursor: pointer;">
                 </div>
             </div>
 
-            <!-- Calendar Side Panel -->
-            <div id="calendar-panel" class="calendar-panel">
-                <div class="cal-header">
-                    <h2 style="margin: 0; font-weight: 800;">Global Schedule</h2>
-                    <button onclick="toggleCalendar()" style="background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
+            <!-- Global Calendar Panel -->
+            <div id="calendar-tray" class="calendar-side">
+                <div class="cal-head">
+                    <h2 style="margin: 0; font-weight: 800; font-size: 1.6rem;">Global Nexus</h2>
+                    <p style="color: #64748b; margin-top: 5px;">Link your events across dimensions.</p>
                 </div>
-                <div style="padding: 20px; background: #f8fafc; display: flex; justify-content: space-between; align-items: center;">
-                    <h4 id="month-name" style="margin:0;">OCTOBER 2024</h4>
+                <div style="padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 id="current-month" style="margin: 0; font-weight: 600;">OCTOBER 2024</h3>
                     <div style="display: flex; gap: 10px;">
-                        <button onclick="changeMonth(-1)" style="border-radius: 50%; border: 1px solid #e2e8f0; width: 30px; height: 30px; cursor: pointer;">&lt;</button>
-                        <button onclick="changeMonth(1)" style="border-radius: 50%; border: 1px solid #e2e8f0; width: 30px; height: 30px; cursor: pointer;">&gt;</button>
+                        <button onclick="navMonth(-1)" style="background: none; border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 50%; width: 35px; height: 35px; cursor: pointer;">←</button>
+                        <button onclick="navMonth(1)" style="background: none; border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 50%; width: 35px; height: 35px; cursor: pointer;">→</button>
                     </div>
                 </div>
-                <div id="calendar-grid"></div>
+                <div id="cal-grid" class="cal-grid"></div>
             </div>
-        </section>
+        </main>
     </div>
 
-    <!-- Schedule Creator Modal -->
-    <div id="schedule-modal">
-        <h3 id="modal-date-title" style="margin-top: 0; font-weight: 800;">Oct 14, 2024</h3>
-        <p style="color: #64748b; font-size: 0.9rem;">Manage meetings for this neural date.</p>
+    <!-- Interface Modal -->
+    <div id="nexus-modal" class="nexus-modal">
+        <h2 id="modal-title" style="margin-top: 0; font-weight: 800;">Oct 14, 2024</h2>
+        <div id="modal-meeting-list" style="margin-bottom: 25px;"></div>
         
-        <div id="meeting-list" style="margin-bottom: 20px; max-height: 200px; overflow-y: auto;">
-            <!-- Meetings populated here -->
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 10px; border-top: 1px solid #f1f5f9; padding-top: 20px;">
-            <input type="text" id="mt-subject" placeholder="Meeting Subject..." style="width: 100%; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; font-family: inherit;">
-            <input type="time" id="mt-time" style="width: 100%; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; font-family: inherit;">
-            <button onclick="saveMeeting()" style="background: #3b82f6; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">Add Neural Meeting</button>
-            <button onclick="closeSchedule()" style="background: none; border: none; color: #94a3b8; font-size: 0.8rem; cursor: pointer; font-weight: 700;">Discard</button>
+        <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 25px;">
+            <input type="text" id="mt-name" placeholder="Mission Name / Meeting Topic">
+            <input type="time" id="mt-time">
+            <button class="btn-launch" onclick="launchMeeting()">Initialize Meeting</button>
+            <button onclick="closeNexusModal()" style="background: none; border: none; color: #64748b; width: 100%; margin-top: 15px; cursor: pointer; font-weight: 600;">Exit Portal</button>
         </div>
     </div>
 
     <script>
-        // --- CORE STATE ---
-        let drawing = false;
-        let currentTool = 'pen';
-        let currentMonth = new Date().getMonth();
-        let currentYear = new Date().getFullYear();
-        let activeScheduleKey = '';
-        let scheduledMeetings = JSON.parse(localStorage.getItem('exo_vault_meetings')) || {};
+        let isDrawing = false;
+        let activeTool = 'pen';
+        let viewMonth = new Date().getMonth();
+        let viewYear = new Date().getFullYear();
+        let selectedKey = '';
+        let registry = JSON.parse(localStorage.getItem('exo_nexus_events')) || {};
         let canvas, ctx;
 
-        // --- WHITEBOARD ENGINE ---
-        function initWhiteboard() {
-            canvas = document.getElementById('main-canvas');
+        // --- NEURAL WHITEBOARD ---
+        function initNexus() {
+            canvas = document.getElementById('canvas');
             ctx = canvas.getContext('2d');
-            resizeCanvas();
-            window.addEventListener('resize', resizeCanvas);
+            resizeNexus();
+            window.onresize = resizeNexus;
 
-            canvas.addEventListener('mousedown', startDrawing);
-            canvas.addEventListener('mousemove', draw);
-            canvas.addEventListener('mouseup', stopDrawing);
-            canvas.addEventListener('mouseleave', stopDrawing);
-            
-            // Touch Support
-            canvas.addEventListener('touchstart', (e) => startDrawing(e.touches[0]));
-            canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e.touches[0]); });
-            canvas.addEventListener('touchend', stopDrawing);
-        }
+            canvas.onmousedown = startDraw;
+            canvas.onmousemove = drawMove;
+            canvas.onmouseup = stopDraw;
+            canvas.onmouseleave = stopDraw;
 
-        function resizeCanvas() {
-            const container = document.getElementById('whiteboard-container');
-            const data = canvas.toDataURL();
-            canvas.width = container.offsetWidth;
-            canvas.height = container.offsetHeight;
-            const img = new Image();
-            img.onload = () => ctx.drawImage(img, 0, 0);
-            img.src = data;
-        }
-
-        function startDrawing(e) {
-            drawing = true;
-            ctx.beginPath();
-            ctx.moveTo(e.clientX - canvas.offsetLeft - 80, e.clientY - canvas.offsetTop - 70); // Offset for sidebar/header
-        }
-
-        function draw(e) {
-            if (!drawing) return;
-            ctx.strokeStyle = currentTool === 'eraser' ? '#ffffff' : document.getElementById('color-picker').value;
-            ctx.lineWidth = currentTool === 'eraser' ? 40 : 3;
-            ctx.lineCap = 'round';
-            ctx.lineTo(e.clientX - canvas.offsetLeft - 80, e.clientY - canvas.offsetTop - 70);
-            ctx.stroke();
-            saveCanvasToVault();
-        }
-
-        function stopDrawing() { drawing = false; }
-        function setTool(tool) {
-            currentTool = tool;
-            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`${tool}-tool`).classList.add('active');
-        }
-        function clearCanvas() { ctx.clearRect(0,0, canvas.width, canvas.height); saveCanvasToVault(); }
-
-        // --- VAULT PERSISTENCE ---
-        function saveCanvasToVault() { localStorage.setItem('exo_vault_canvas', canvas.toDataURL()); }
-        function saveToVault() { localStorage.setItem('exo_vault_meetings', JSON.stringify(scheduledMeetings)); }
-        function loadFromVault() {
-            const savedImg = localStorage.getItem('exo_vault_canvas');
-            if(savedImg) {
+            // Load saved art
+            const saved = localStorage.getItem('exo_nexus_art');
+            if(saved) {
                 const img = new Image();
                 img.onload = () => ctx.drawImage(img, 0, 0);
-                img.src = savedImg;
+                img.src = saved;
             }
+
+            renderNexusCal();
+            setInterval(updateClock, 1000);
         }
 
-        // --- CALENDAR ENGINE ---
-        function toggleCalendar() { document.getElementById('calendar-panel').classList.toggle('open'); }
-        
-        function renderCalendar() {
-            const grid = document.getElementById('calendar-grid');
+        function resizeNexus() {
+            const temp = canvas.toDataURL();
+            canvas.width = canvas.parentElement.offsetWidth;
+            canvas.height = canvas.parentElement.offsetHeight;
+            const img = new Image();
+            img.onload = () => ctx.drawImage(img, 0, 0);
+            img.src = temp;
+        }
+
+        function startDraw(e) {
+            isDrawing = true;
+            ctx.beginPath();
+            ctx.moveTo(e.clientX - 85, e.clientY - 80);
+        }
+
+        function drawMove(e) {
+            if(!isDrawing) return;
+            ctx.strokeStyle = activeTool === 'eraser' ? '#020617' : document.getElementById('brush-color').value;
+            ctx.lineWidth = activeTool === 'eraser' ? 50 : 3;
+            ctx.lineCap = 'round';
+            ctx.lineTo(e.clientX - 85, e.clientY - 80);
+            ctx.stroke();
+            localStorage.setItem('exo_nexus_art', canvas.toDataURL());
+        }
+
+        function stopDraw() { isDrawing = false; }
+        function switchTool(t) { 
+            activeTool = t; 
+            document.querySelectorAll('.tool').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tool-${t}`).classList.add('active');
+        }
+        function wipeCanvas() { ctx.clearRect(0,0, canvas.width, canvas.height); localStorage.removeItem('exo_nexus_art'); }
+
+        // --- CALENDAR SYSTEM ---
+        function toggleCalendar() { document.getElementById('calendar-tray').classList.toggle('active'); }
+        function navMonth(d) {
+            viewMonth += d;
+            if(viewMonth > 11) { viewMonth = 0; viewYear++; }
+            if(viewMonth < 0) { viewMonth = 11; viewYear--; }
+            renderNexusCal();
+        }
+
+        function renderNexusCal() {
+            const grid = document.getElementById('cal-grid');
             const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
-            document.getElementById('month-name').innerText = `${months[currentMonth]} ${currentYear}`;
+            document.getElementById('current-month').innerText = `${months[viewMonth]} ${viewYear}`;
             
             grid.innerHTML = '';
-            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const first = new Date(viewYear, viewMonth, 1).getDay();
+            const days = new Date(viewYear, viewMonth + 1, 0).getDate();
             
-            for(let i=0; i<firstDay; i++) grid.innerHTML += '<div></div>';
+            for(let i=0; i<first; i++) grid.innerHTML += '<div></div>';
             
-            for(let d=1; d<=daysInMonth; d++) {
-                const key = `${currentYear}-${currentMonth}-${d}`;
-                const hasMeeting = scheduledMeetings[key] && scheduledMeetings[key].length > 0;
-                const isToday = (d === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear());
+            for(let i=1; i<=days; i++) {
+                const key = `${viewYear}-${viewMonth}-${i}`;
+                const hasE = registry[key] && registry[key].length > 0;
+                const isT = (i === new Date().getDate() && viewMonth === new Date().getMonth() && viewYear === new Date().getFullYear());
                 
                 grid.innerHTML += `
-                    <div class="calendar-day ${isToday ? 'today' : ''}" onclick="openSchedule('${key}')">
-                        ${d}
-                        ${hasMeeting ? '<div class="meeting-dot"></div>' : ''}
+                    <div class="day ${isT ? 'today' : ''}" onclick="openRegistry('${key}')">
+                        ${i}
+                        ${hasE ? '<div class="dot"></div>' : ''}
                     </div>
                 `;
             }
         }
 
-        function changeMonth(dir) {
-            currentMonth += dir;
-            if(currentMonth > 11) { currentMonth = 0; currentYear++; }
-            if(currentMonth < 0) { currentMonth = 11; currentYear--; }
-            renderCalendar();
-        }
-
-        function openSchedule(key) {
-            activeScheduleKey = key;
+        function openRegistry(key) {
+            selectedKey = key;
             const [y, m, d] = key.split('-');
             const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-            document.getElementById('modal-date-title').innerText = `${months[m]} ${d}, ${y}`;
+            document.getElementById('modal-title').innerText = `${months[m]} ${d}, ${y}`;
             
-            const list = document.getElementById('meeting-list');
+            const list = document.getElementById('modal-meeting-list');
             list.innerHTML = '';
-            const meetings = scheduledMeetings[key] || [];
             
-            meetings.forEach((m, idx) => {
-                list.innerHTML += `
-                    <div class="meeting-item">
-                        <span class="sync-btn" onclick="syncToGoogleLive('${m.subject}', '${key}', '${m.time}')" title="Sync to REAL Google Calendar">📅</span>
-                        <b>${m.time}</b> ${m.subject}
-                    </div>
-                `;
-            });
+            if(registry[key]) {
+                registry[key].forEach(ev => {
+                    list.innerHTML += `
+                        <div class="meeting-card">
+                            <div>
+                                <div style="font-weight: 800; font-size: 1rem;">${ev.topic}</div>
+                                <div style="font-size: 0.8rem; color: #64748b;">${ev.time}</div>
+                            </div>
+                            <div class="google-sync-chip" onclick="cloudSync('${ev.topic}', '${key}', '${ev.time}')">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg" width="14"> SYNC
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                list.innerHTML = `<div style="text-align:center; color:#64748b; font-style:italic;">No dimensional events recorded.</div>`;
+            }
             
-            document.getElementById('schedule-modal').classList.add('active');
+            document.getElementById('nexus-modal').classList.add('active');
         }
 
-        function closeSchedule() { 
-            document.getElementById('schedule-modal').classList.remove('active');
-            document.getElementById('mt-subject').value = '';
-        }
+        function closeNexusModal() { document.getElementById('nexus-modal').classList.remove('active'); }
 
-        function saveMeeting() {
-            const subject = document.getElementById('mt-subject').value;
+        function launchMeeting() {
+            const topic = document.getElementById('mt-name').value;
             const time = document.getElementById('mt-time').value;
-            if(!subject || !time) return alert("Missing info.");
+            if(!topic || !time) return;
+
+            if(!registry[selectedKey]) registry[selectedKey] = [];
+            registry[selectedKey].push({ topic, time });
             
-            if(!scheduledMeetings[activeScheduleKey]) scheduledMeetings[activeScheduleKey] = [];
-            scheduledMeetings[activeScheduleKey].push({ subject, time });
+            localStorage.setItem('exo_nexus_events', JSON.stringify(registry));
+            renderNexusCal();
             
-            saveToVault();
-            renderCalendar();
-            
-            // TRIGGER THE LIVE SYNC PROMPT
+            // AUTOMATED SYNC INVITATION
             setTimeout(() => {
-                if(confirm("Saved to Dashboard! Sync this to your ACTUAL Google Calendar app now?")) {
-                    syncToGoogleLive(subject, activeScheduleKey, time);
+                if(confirm("Event logged in Nexus! Synchronize to your Global Google Calendar now?")) {
+                    cloudSync(topic, selectedKey, time);
                 }
             }, 100);
             
-            openSchedule(activeScheduleKey); // Refresh list
+            openRegistry(selectedKey);
         }
 
-        // --- TRASPARENT SYNC ENGINE ---
-        function syncToGoogleLive(subject, key, time) {
-            const [year, month, day] = key.split('-');
-            const mStr = String(Number(month) + 1).padStart(2, '0');
-            const dStr = String(day).padStart(2, '0');
-            const timeClean = time.replace(':', '');
+        function cloudSync(text, key, time) {
+            const [y, m, d] = key.split('-');
+            const MM = String(Number(m)+1).padStart(2,'0');
+            const DD = String(d).padStart(2,'0');
+            const T = time.replace(':','');
+            const start = `${y}${MM}${DD}T${T}00Z`;
+            const end = `${y}${MM}${DD}T${String(Number(time.split(':')[0])+1).padStart(2,'0')}${time.split(':')[1]}00Z`;
             
-            const startStr = `${year}${mStr}${dStr}T${timeClean}00Z`;
-            const endStr = `${year}${mStr}${dStr}T${String(Number(time.split(':')[0]) + 1).padStart(2, '0')}${time.split(':')[1]}00Z`;
-            
-            const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(subject)}&dates=${startStr}/${endStr}&details=Sent via Exo-Pulsar Nexus`;
+            const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(text)}&dates=${start}/${end}&details=Generated via Exo-Pulsar Nexus Hub.`;
             window.open(url, '_blank');
         }
 
-        function clearWorkspace() {
-            if(confirm("Destroy entire Neural Workspace? This cannot be undone!")) {
-                localStorage.clear();
-                window.location.reload();
-            }
-        }
+        function updateClock() { document.getElementById('nexus-clock').innerText = new Date().toLocaleTimeString(); }
+        function resetSystem() { if(confirm("Initiate total system wipe?")) { localStorage.clear(); location.reload(); } }
 
-        function updateClock() {
-            const n = new Date();
-            document.getElementById('digital-clock').innerText = n.toLocaleTimeString();
-        }
-
-        function initParticles(type) {
-            const container = document.getElementById('particle-bg');
-            container.innerHTML = '';
-            // Basic space/vortex background logic
-            container.style.background = 'radial-gradient(circle at center, #1e293b 0%, #0f172a 100%)';
-        }
-
-        // --- BOOT UP ---
-        window.onload = () => {
-            initWhiteboard();
-            loadFromVault();
-            renderCalendar();
-            initParticles('Space');
-            setInterval(updateClock, 1000);
-        };
+        window.onload = initNexus;
     </script>
 </body>
 </html>
