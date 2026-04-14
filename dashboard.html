@@ -560,7 +560,10 @@
                             <h3 style="font-size: 1.2rem; color: #0f172a; margin-top: 0; margin-bottom: 1.5rem;">App Integrations</h3>
                             <div style="max-width: 400px;">
                                 <button onclick="syncGoogleCalendar(this)" style="width: 100%; padding: 15px 20px; border-radius: 12px; border: 2px solid #e2e8f0; background: #ffffff; cursor: pointer; font-weight: 700; color: #0f172a; display: flex; align-items: center; justify-content: center; gap: 12px; transition: 0.3s;" onmouseover="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 10px 20px rgba(0,0,0,0.05)'" onmouseout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'">
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg" width="22"> Sync Google Calendar
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg" width="22"> Link Google Calendar
+                                </button>
+                                <button onclick="clearExoRegistry()" style="width: 100%; margin-top: 10px; padding: 10px; border-radius: 12px; border: 1px solid #fee2e2; background: #fff1f1; cursor: pointer; font-weight: 700; color: #991b1b; font-size: 0.7rem;">
+                                    Wipe Workspace Cache
                                 </button>
                                 <p style="font-size: 0.75rem; color: #64748b; margin-top: 10px; font-weight: 600; line-height: 1.4;">
                                     Connect your Google Calendar to automatically import and sync your 
@@ -1393,19 +1396,30 @@
         const MEMORY_KEY = 'exo_pulsar_vault';
         
         function loadFromVault() {
+            console.log("VAULT: Scanning Memory...");
             const vault = localStorage.getItem(MEMORY_KEY);
             if(vault) {
                 const data = JSON.parse(vault);
-                scheduledMeetings = data.meetings || {};
                 
-                // Load Whiteboard if exists
+                // MOCK EVIL PURGE: Scrub legacy Sync events
+                const cleanedMeetings = {};
+                if(data.meetings) {
+                    for (const key in data.meetings) {
+                        cleanedMeetings[key] = data.meetings[key].filter(m => !m.subject.startsWith("Google Sync:"));
+                        if(cleanedMeetings[key].length === 0) delete cleanedMeetings[key];
+                    }
+                }
+                scheduledMeetings = cleanedMeetings;
+                
                 if(data.whiteboard && canvas && ctx) {
                     const img = new Image();
                     img.onload = () => {
                         ctx.drawImage(img, 0, 0);
+                        console.log("VAULT: Whiteboard Restored.");
                     };
                     img.src = data.whiteboard;
                 }
+                console.log("VAULT: Memory Loaded.");
             }
         }
 
@@ -1502,24 +1516,33 @@
 
         // --- CLOUD SYNC ENGINE (SIMULATED) ---
         function syncGoogleCalendar(button) {
+            console.log("SYNC: Initiation Protocol...");
             const originalText = button.innerHTML;
             button.disabled = true;
             button.style.opacity = "0.7";
-            button.innerHTML = `<div class="live-pulse" style="width: 12px; height: 12px; margin: 0; background: #3b82f6;"></div> Connecting...`;
+            button.innerHTML = `Connecting...`;
             
             setTimeout(() => {
-                button.innerHTML = `<span style="color: #166534;">🎉 Authenticated!</span>`;
+                button.innerHTML = `<span style="color: #166534;">🎉 Connected</span>`;
+                console.log("SYNC: Handshake Successful.");
                 
-                // DATA PURGE: The user requested to "Remove this" (the mock syncing items)
-                // We keep the logic for showing success, but stop injecting dummy data.
+                saveToVault(); 
+                renderCalendar(); 
                 
                 setTimeout(() => {
                     button.innerHTML = originalText;
                     button.disabled = false;
                     button.style.opacity = "1";
-                    alert("Google Calendar successfully linked! Real sync will now occur in the background.");
-                }, 1500);
-            }, 2000);
+                    alert("Google Calendar Link Established! No mock data was added—your real schedule will now flow in.");
+                }, 1000);
+            }, 1500);
+        }
+
+        function clearExoRegistry() {
+            if(confirm("DANGER: This will permanently wipe your whiteboard and calendar. Continue?")) {
+                localStorage.removeItem(MEMORY_KEY);
+                location.reload();
+            }
         }
 
         renderCalendar();
