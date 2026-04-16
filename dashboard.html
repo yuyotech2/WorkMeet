@@ -8,9 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
-        /* Internal Logic Overrides for Stability */
         .hidden { display: none !important; }
-        #canvas { touch-action: none; cursor: crosshair; background: #ffffff; }
+        #canvas { touch-action: none; cursor: crosshair; background: #ffffff; width: 100%; height: 100%; }
+        .app-container { display: flex; width: 100%; height: 100vh; background: #f1f5f9; }
     </style>
 </head>
 <body>
@@ -18,7 +18,7 @@
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-logo">
-                <div style="width: 32px; height: 32px; background: var(--primary); border-radius: 8px;"></div>
+                <div style="width: 32px; height: 32px; background: #008291; border-radius: 8px;"></div>
                 Exo-Pulsar <span class="version-label">v2.4</span>
             </div>
 
@@ -50,219 +50,95 @@
         </aside>
 
         <!-- Main Content Engine -->
-        <main class="meeting-content">
-            <!-- MEETING HUB VIEW -->
-            <div id="hub-view" class="scroll-area">
+        <main class="meeting-content" style="flex: 1; display: flex; flex-direction: column;">
+            <div id="hub-view" class="scroll-area" style="padding: 2rem;">
                 <header class="meeting-header">
                     <div class="meeting-info">
-                        <h2>Production Hub Meeting</h2>
-                        <div style="display: flex; align-items: center; gap: 15px; color: var(--text-dim); font-weight: 600;">
+                        <h2 style="font-size: 2.5rem; margin-bottom: 0;">Production Hub Meeting</h2>
+                        <div style="display: flex; align-items: center; gap: 15px; color: #64748b; font-weight: 600;">
                             <span>4 Participants</span>
                             <div class="live-indicator"></div>
                             <span id="live-timer">Live 00:42:15</span>
                         </div>
                     </div>
-                    <button class="btn btn-secondary">+ Invite Participants</button>
                 </header>
 
-                <div class="video-grid">
+                <div class="video-grid" style="margin-top: 2rem;">
                     <div class="participant-box">
-                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d" class="participant-img" alt="Me">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d" class="participant-img" alt="Me" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;">
                         <div class="participant-name-tag">You (Host) <div class="live-pulse"></div></div>
                     </div>
-                    <div class="participant-box">
-                        <div class="waiting-card">
-                            <div style="font-size: 3rem;">👤</div>
-                            <h3>Waiting for Peer...</h3>
-                            <p>Share your Room ID to start the neural link.</p>
-                            <div id="my-peer-id" style="font-family: monospace; background: #e2e8f0; padding: 10px; border-radius: 10px; font-weight: 700;">CONNECTING...</div>
-                        </div>
+                    <div class="participant-box" style="background: white; border: 2px dashed #e2e8f0; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#64748b;">
+                        <div style="font-size: 3rem;">👤</div>
+                        <h3 style="margin: 10px 0;">Waiting for Peer...</h3>
+                        <div id="my-peer-id" style="font-family: monospace; background: #f1f5f9; padding: 10px; border-radius: 10px;">CONNECTING...</div>
                     </div>
                 </div>
 
-                <!-- CONTROLS -->
-                <div class="controls-bar">
-                    <button class="control-btn" title="Toggle Mic">🎙️</button>
-                    <button class="control-btn" title="Toggle Camera">📹</button>
-                    <button class="control-btn active sharing" title="Start Sharing">📤</button>
-                    <button class="control-btn" onclick="toggleChat()" title="Open Chat">💬</button>
+                <div class="controls-bar" style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);">
+                    <button class="control-btn">🎙️</button>
+                    <button class="control-btn">📹</button>
+                    <button class="control-btn sharing">📤</button>
+                    <button class="control-btn" onclick="toggleChat()">💬</button>
                     <button class="control-btn leave">End Session</button>
                 </div>
             </div>
 
-            <!-- CALENDAR VIEW -->
-            <div id="cal-view" class="calendar-view hidden">
-                <header class="meeting-header">
+            <div id="cal-view" class="calendar-view hidden" style="padding: 2rem;">
+                 <header class="meeting-header">
                     <div class="meeting-info">
-                        <h2>Master Schedule</h2>
-                        <p>OCTOBER 2024 • Global Dimension Sync</p>
+                        <h2 style="font-size: 2.5rem; margin-bottom: 0;">Master Schedule</h2>
+                        <p style="color: #64748b;">OCTOBER 2024</p>
                     </div>
-                    <button class="btn btn-primary" onclick="openAddEvent()">+ Add Event</button>
                 </header>
-
-                <div class="calendar-header-row">
-                    <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
-                </div>
                 <div id="main-calendar-grid" class="calendar-grid"></div>
             </div>
         </main>
-
-        <!-- CHAT PANEL -->
-        <aside id="chat-panel" class="chat-panel hidden">
-            <div class="chat-header">
-                <h3 style="margin: 0;">Session Chat</h3>
-                <button onclick="toggleChat()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
-            </div>
-            <div class="chat-messages" id="chat-msgs">
-                <div class="message them">Hey everyone! Did the design review start?</div>
-                <div class="message you">Just about to. Share your screen!</div>
-            </div>
-            <div class="chat-footer">
-                <div class="chat-input-wrapper">
-                    <input type="text" class="chat-input" placeholder="Type a message...">
-                    <button class="btn btn-primary" style="padding: 8px 15px;">Send</button>
-                </div>
-            </div>
-        </aside>
     </div>
 
-    <!-- ADD EVENT MODAL -->
-    <div id="event-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <h3>Log New Event</h3>
-            <p>Assign this task to the dimensional timeline.</p>
-            
-            <div class="form-group">
-                <label>Event Topic</label>
-                <input type="text" id="ev-topic" class="form-input" placeholder="e.g. Design Review">
-            </div>
-            
-            <div class="form-group">
-                <label>Time Reference</label>
-                <input type="time" id="ev-time" class="form-input">
-            </div>
-
-            <div class="category-toggle">
-                <div class="toggle-opt work active" id="opt-work" onclick="setCat('work')">Work</div>
-                <div class="toggle-opt school" id="opt-school" onclick="setCat('school')">School</div>
-            </div>
-
-            <button class="modal-btn" onclick="saveGlobalEvent()" style="color: white; margin-bottom: 10px;">Sync to Portal</button>
-            <button class="btn btn-secondary" onclick="closeAddEvent()" style="width: 100%;">Discard</button>
+    <!-- CHAT PANEL -->
+    <aside id="chat-panel" class="chat-panel hidden">
+        <div class="chat-header">
+            <h3>Session Chat</h3>
+            <button onclick="toggleChat()">×</button>
         </div>
-    </div>
+        <div class="chat-messages" id="chat-msgs" style="flex: 1; padding: 1rem; overflow-y: auto;">
+            <div class="message them">Hey! Restore complete?</div>
+            <div class="message you">Yes, everything is normal now.</div>
+        </div>
+        <div class="chat-footer" style="padding: 1rem;">
+             <input type="text" placeholder="Type a message..." style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0;">
+        </div>
+    </aside>
 
     <script>
-        // --- GLOBAL STATE ---
         let currentView = 'hub';
-        let activeCategory = 'work';
-        let selectedDateKey = '';
         let events = JSON.parse(localStorage.getItem('exo_global_events')) || {};
-        let viewMonth = new Date().getMonth();
-        let viewYear = new Date().getFullYear();
+        const peer = new Peer();
+        peer.on('open', (id) => document.getElementById('my-peer-id').innerText = id);
 
-        // --- NAVIGATION ---
         function switchView(view) {
             document.getElementById('hub-view').classList.add('hidden');
             document.getElementById('cal-view').classList.add('hidden');
-            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-            
             document.getElementById(`${view}-view`).classList.remove('hidden');
-            document.getElementById(`btn-${view === 'hub' ? 'hub' : 'cal'}`).classList.add('active');
             if(view === 'cal') renderCalendar();
         }
 
         function toggleChat() { document.getElementById('chat-panel').classList.toggle('hidden'); }
-
-        // --- CALENDAR ENGINE ---
+        
         function renderCalendar() {
             const grid = document.getElementById('main-calendar-grid');
             grid.innerHTML = '';
-            
-            const firstDay = new Date(viewYear, viewMonth, 1).getDay();
-            const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-            
-            for(let i=0; i<firstDay; i++) grid.innerHTML += '<div class="calendar-day empty"></div>';
-            
-            for(let d=1; d<=daysInMonth; d++) {
-                const key = `${viewYear}-${viewMonth}-${d}`;
-                const dailyEvents = events[key] || [];
-                const isToday = (d === new Date().getDate() && viewMonth === new Date().getMonth() && viewYear === new Date().getFullYear());
-                
-                let eventsHtml = dailyEvents.map(e => `
-                    <div class="calendar-event ${e.category}" onclick="cloudSync('${e.topic}', '${key}', '${e.time}')" title="Sync to Google Calendar">
-                        <b>${e.time}</b> ${e.topic} 📅
-                    </div>
-                `).join('');
-
-                grid.innerHTML += `
-                    <div class="calendar-day" onclick="prepareEvent('${key}')">
-                        <div class="day-num ${isToday ? 'today' : ''}">${d}</div>
-                        ${eventsHtml}
-                    </div>
-                `;
+            const days = 31;
+            for(let i=1; i<=days; i++) {
+                grid.innerHTML += `<div class="calendar-day" style="background:white; border:1px solid #f1f5f9; padding:15px; min-height:100px;">
+                    <div class="day-num">${i}</div>
+                </div>`;
             }
         }
 
-        function openAddEvent() { document.getElementById('event-modal').classList.remove('hidden'); }
-        function closeAddEvent() { document.getElementById('event-modal').classList.add('hidden'); }
-
-        function prepareEvent(key) {
-            selectedDateKey = key;
-            openAddEvent();
-        }
-
-        function setCat(cat) {
-            activeCategory = cat;
-            document.getElementById('opt-work').classList.remove('active');
-            document.getElementById('opt-school').classList.remove('active');
-            document.getElementById(`opt-${cat}`).classList.add('active');
-        }
-
-        function saveGlobalEvent() {
-            const topic = document.getElementById('ev-topic').value;
-            const time = document.getElementById('ev-time').value;
-            if(!topic || !time || !selectedDateKey) return alert("Missing Portal Data.");
-
-            if(!events[selectedDateKey]) events[selectedDateKey] = [];
-            events[selectedDateKey].push({ topic, time, category: activeCategory });
-            localStorage.setItem('exo_global_events', JSON.stringify(events));
-            
-            renderCalendar();
-            closeAddEvent();
-            
-            // GOOGLE SYNC PROMPT
-            setTimeout(() => {
-                if(confirm("Event Logged! Synchronize to your mobile Google Calendar?")) {
-                    cloudSync(topic, selectedDateKey, time);
-                }
-            }, 100);
-        }
-
-        function cloudSync(text, key, time) {
-            const [y, m, d] = key.split('-');
-            const mm = String(Number(m)+1).padStart(2,'0');
-            const dd = String(d).padStart(2,'0');
-            const tt = time.replace(':','');
-            
-            const start = `${y}${mm}${dd}T${tt}00Z`;
-            const end = `${y}${mm}${dd}T${String(Number(time.split(':')[0])+1).padStart(2,'0')}${time.split(':')[1]}00Z`;
-            
-            const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(text)}&dates=${start}/${end}&details=Synced via Exo-Pulsar Productivity Hub.`;
-            window.open(url, '_blank');
-        }
-
-        // --- PEER ENGINE ---
-        const peer = new Peer();
-        peer.on('open', (id) => {
-            document.getElementById('my-peer-id').innerText = id;
-        });
-
-        function wipeLocalCore() { if(confirm("ABANDON WORKSPACE?")) { localStorage.clear(); location.reload(); } }
-
-        window.onload = () => {
-            if(currentView === 'cal') renderCalendar();
-        };
+        function wipeLocalCore() { localStorage.clear(); location.reload(); }
+        window.onload = () => { if(currentView === 'cal') renderCalendar(); };
     </script>
 </body>
 </html>
