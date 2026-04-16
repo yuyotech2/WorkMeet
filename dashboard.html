@@ -2,143 +2,37 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Exo-Pulsar | Productivity Hub</title>
     <link rel="stylesheet" href="dashboard.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
         .hidden { display: none !important; }
-        #canvas { touch-action: none; cursor: crosshair; background: #ffffff; width: 100%; height: 100%; }
-        .app-container { display: flex; width: 100%; height: 100vh; background: #f1f5f9; }
+        .app-container { display: flex; width: 100%; height: 100vh; background: #f1f5f9; font-family: 'Outfit', sans-serif; }
+        .sidebar { width: 250px; background: white; padding: 25px; border-right: 1px solid #e2e8f0; }
+        .main-content { flex: 1; padding: 40px; }
+        .p-box { height: 350px; background: #e2e8f0; border-radius: 40px; }
+        .waiting { background: white; border: 2px dashed #cbd5e1; display:flex; align-items:center; justify-content:center; }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar Navigation -->
         <aside class="sidebar">
-            <div class="sidebar-logo">
-                <div style="width: 32px; height: 32px; background: #008291; border-radius: 8px;"></div>
-                Exo-Pulsar <span class="version-label">v2.4</span>
-            </div>
-
-            <div class="sidebar-section">
-                <div class="sidebar-title">Manage</div>
-                <a href="#" class="sidebar-item active" id="btn-hub" onclick="switchView('hub')">
-                    <span style="font-size: 1.2rem;">🎥</span> Meeting Hub
-                </a>
-                <a href="#" class="sidebar-item" id="btn-cal" onclick="switchView('cal')">
-                    <span style="font-size: 1.2rem;">📅</span> Full Calendar
-                </a>
-            </div>
-
-            <div class="sidebar-section">
-                <div class="sidebar-title">Spaces</div>
-                <a href="#" class="sidebar-item active school">
-                    <span style="font-size: 1.2rem;">🏢</span> Production Hub
-                </a>
-                <a href="#" class="sidebar-item">
-                    <span style="font-size: 1.2rem;">🎒</span> CS 101 Study Group
-                </a>
-            </div>
-
-            <div style="margin-top: auto;">
-                <a href="#" class="sidebar-item" onclick="wipeLocalCore()" style="color: #ef4444;">
-                    <span style="font-size: 1.2rem;">🚪</span> Leave Workspace
-                </a>
+            <h2 style="color: #008291; font-weight: 800;">Exo-Pulsar</h2>
+            <div style="margin-top: 30px;">
+                <div style="padding: 12px; background: #f1f5f9; border-radius: 12px; margin-bottom: 10px; font-weight: 700;">🎥 Meeting Hub</div>
+                <div style="padding: 12px; color: #64748b; font-weight: 600;">📅 Full Calendar</div>
             </div>
         </aside>
-
-        <!-- Main Content Engine -->
-        <main class="meeting-content" style="flex: 1; display: flex; flex-direction: column;">
-            <div id="hub-view" class="scroll-area" style="padding: 2rem;">
-                <header class="meeting-header">
-                    <div class="meeting-info">
-                        <h2 style="font-size: 2.5rem; margin-bottom: 0;">Production Hub Meeting</h2>
-                        <div style="display: flex; align-items: center; gap: 15px; color: #64748b; font-weight: 600;">
-                            <span>4 Participants</span>
-                            <div class="live-indicator"></div>
-                            <span id="live-timer">Live 00:42:15</span>
-                        </div>
-                    </div>
-                </header>
-
-                <div class="video-grid" style="margin-top: 2rem;">
-                    <div class="participant-box">
-                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d" class="participant-img" alt="Me" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;">
-                        <div class="participant-name-tag">You (Host) <div class="live-pulse"></div></div>
-                    </div>
-                    <div class="participant-box" style="background: white; border: 2px dashed #e2e8f0; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#64748b;">
-                        <div style="font-size: 3rem;">👤</div>
-                        <h3 style="margin: 10px 0;">Waiting for Peer...</h3>
-                        <div id="my-peer-id" style="font-family: monospace; background: #f1f5f9; padding: 10px; border-radius: 10px;">CONNECTING...</div>
-                    </div>
+        <main class="main-content">
+            <h1 style="font-size: 3rem; margin: 0; font-weight: 900; letter-spacing: -2px;">Production Hub Meeting</h1>
+            <p style="color: #64748b; font-weight: 600;">RESTORED SESSION | LIVE</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 40px;">
+                <div class="p-box"></div>
+                <div class="p-box waiting">
+                    <h3 style="color: #94a3b8;">Waiting for Pulse...</h3>
                 </div>
-
-                <div class="controls-bar" style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);">
-                    <button class="control-btn">🎙️</button>
-                    <button class="control-btn">📹</button>
-                    <button class="control-btn sharing">📤</button>
-                    <button class="control-btn" onclick="toggleChat()">💬</button>
-                    <button class="control-btn leave">End Session</button>
-                </div>
-            </div>
-
-            <div id="cal-view" class="calendar-view hidden" style="padding: 2rem;">
-                 <header class="meeting-header">
-                    <div class="meeting-info">
-                        <h2 style="font-size: 2.5rem; margin-bottom: 0;">Master Schedule</h2>
-                        <p style="color: #64748b;">OCTOBER 2024</p>
-                    </div>
-                </header>
-                <div id="main-calendar-grid" class="calendar-grid"></div>
             </div>
         </main>
     </div>
-
-    <!-- CHAT PANEL -->
-    <aside id="chat-panel" class="chat-panel hidden">
-        <div class="chat-header">
-            <h3>Session Chat</h3>
-            <button onclick="toggleChat()">×</button>
-        </div>
-        <div class="chat-messages" id="chat-msgs" style="flex: 1; padding: 1rem; overflow-y: auto;">
-            <div class="message them">Hey! Restore complete?</div>
-            <div class="message you">Yes, everything is normal now.</div>
-        </div>
-        <div class="chat-footer" style="padding: 1rem;">
-             <input type="text" placeholder="Type a message..." style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0;">
-        </div>
-    </aside>
-
-    <script>
-        let currentView = 'hub';
-        let events = JSON.parse(localStorage.getItem('exo_global_events')) || {};
-        const peer = new Peer();
-        peer.on('open', (id) => document.getElementById('my-peer-id').innerText = id);
-
-        function switchView(view) {
-            document.getElementById('hub-view').classList.add('hidden');
-            document.getElementById('cal-view').classList.add('hidden');
-            document.getElementById(`${view}-view`).classList.remove('hidden');
-            if(view === 'cal') renderCalendar();
-        }
-
-        function toggleChat() { document.getElementById('chat-panel').classList.toggle('hidden'); }
-        
-        function renderCalendar() {
-            const grid = document.getElementById('main-calendar-grid');
-            grid.innerHTML = '';
-            const days = 31;
-            for(let i=1; i<=days; i++) {
-                grid.innerHTML += `<div class="calendar-day" style="background:white; border:1px solid #f1f5f9; padding:15px; min-height:100px;">
-                    <div class="day-num">${i}</div>
-                </div>`;
-            }
-        }
-
-        function wipeLocalCore() { localStorage.clear(); location.reload(); }
-        window.onload = () => { if(currentView === 'cal') renderCalendar(); };
-    </script>
 </body>
 </html>
