@@ -129,68 +129,266 @@
         body.dark-mode [style*="background: #1e293b"] { border-color: #334155 !important; }
         /* --- PREMIUM MOBILE MASTERCLASS --- */
         @media (max-width: 1024px) {
+            /* === BASE RESET === */
             html, body { overflow-x: hidden !important; width: 100% !important; margin: 0; padding: 0; }
             .app-container { display: block !important; width: 100vw !important; overflow: hidden !important; }
-            
+
+            /* === SIDEBAR OVERLAY BACKDROP === */
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 999;
+                backdrop-filter: blur(4px);
+            }
+            .sidebar-overlay.active { display: block !important; }
+
+            /* === SIDEBAR: Off-screen drawer === */
             .sidebar {
                 position: fixed !important;
-                left: -300px !important;
+                left: 0 !important;
                 top: 0 !important;
                 bottom: 0 !important;
                 width: 280px !important;
-                display: none !important; /* TOTAL HIDE TO PREVENT GAPS */
+                display: flex !important;
                 z-index: 1000 !important;
+                box-shadow: 10px 0 40px rgba(0,0,0,0.15) !important;
+                transform: translateX(-100%) !important;
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
             }
-            .sidebar.mobile-open { display: flex !important; transform: translateX(300px); }
-            
-            .meeting-content { 
-                width: 100vw !important; 
+            .sidebar.mobile-open { transform: translateX(0) !important; }
+
+            /* === MAIN CONTENT === */
+            .meeting-content {
+                width: 100vw !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 min-width: 100vw !important;
                 height: 100vh !important;
-                display: block !important;
+                display: flex !important;
+                flex-direction: column !important;
             }
-            
-            .top-bar { 
+
+            /* === TOP BAR === */
+            .top-bar {
                 width: 100vw !important;
-                padding: 0 1rem !important; 
-                height: 70px !important; 
+                padding: 0 1rem !important;
+                height: 60px !important;
                 box-sizing: border-box !important;
+                flex-shrink: 0 !important;
             }
-            
-            .video-grid { 
+            .top-bar .btn-primary { display: none !important; }
+
+            /* === SCROLL AREA === */
+            .scroll-area {
+                padding: 1rem !important;
+                padding-bottom: 100px !important;
+                flex: 1 !important;
+                overflow-y: auto !important;
+            }
+
+            /* === VIDEO GRID === */
+            .video-grid {
+                grid-template-columns: 1fr !important;
                 width: 100% !important;
-                padding: 1rem !important; 
+                padding: 0 !important;
                 margin: 0 !important;
+                gap: 0.75rem !important;
                 box-sizing: border-box !important;
             }
-            
-            .participant-box { 
+            .participant-box {
                 width: 100% !important;
-                height: 220px !important; 
-                margin-bottom: 1rem !important;
-                border-radius: 20px !important; 
+                height: 200px !important;
+                border-radius: 18px !important;
             }
-            
-            /* Fix Guest Controls */
-            .participant-box .controls { 
-                position: absolute !important;
-                right: 10px !important;
-                top: 10px !important;
-            }
-            
-            .controls-bar { 
+
+            /* === CONTROLS BAR: Fixed bottom dock === */
+            .controls-bar {
                 position: fixed !important;
-                bottom: 15px !important;
-                width: 94% !important;
+                bottom: 12px !important;
                 left: 3% !important;
-                height: 70px !important;
-                z-index: 101 !important;
-                padding: 0 10px !important;
+                width: 94% !important;
+                height: 60px !important;
+                z-index: 500 !important;
+                padding: 0 8px !important;
+                box-sizing: border-box !important;
+                border-radius: 20px !important;
+                gap: 0.5rem !important;
+            }
+            .control-btn {
+                width: 40px !important;
+                height: 40px !important;
+                border-radius: 12px !important;
+                font-size: 1rem !important;
+            }
+            .control-btn.leave {
+                min-width: 90px !important;
+                font-size: 0.7rem !important;
+                padding: 0 12px !important;
+            }
+
+            /* === CHAT PANEL: Full-screen overlay === */
+            .chat-panel {
+                position: fixed !important;
+                top: 0 !important;
+                right: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                z-index: 900 !important;
+                border-left: none !important;
+            }
+            .chat-panel.hidden {
+                margin-right: 0 !important;
+                transform: translateX(100%) !important;
+                opacity: 0 !important;
+            }
+            .chat-panel:not(.hidden) {
+                transform: translateX(0) !important;
+                opacity: 1 !important;
+            }
+            .chat-header { height: 60px !important; }
+            .chat-footer { padding: 1rem !important; padding-bottom: 1.5rem !important; }
+
+            /* === CALENDAR === */
+            #calendar-view {
+                padding: 1rem !important;
+            }
+            #calendar-view > div:first-child {
+                flex-direction: column !important;
+                gap: 0.75rem !important;
+                align-items: flex-start !important;
+                margin-bottom: 1rem !important;
+            }
+            #calendar-view > div:first-child h1 {
+                font-size: 1.3rem !important;
+            }
+            #calendar-view > div:nth-child(2) {
+                grid-template-columns: repeat(7, 1fr) !important;
+                gap: 3px !important;
+            }
+            #calendar-view > div:nth-child(2) > div:not(#calendar-days):not([id]) {
+                font-size: 0.55rem !important;
+            }
+            #calendar-view .calendar-day {
+                height: 60px !important;
+                border-radius: 10px !important;
+                padding: 4px !important;
+                font-size: 0.55rem !important;
+                overflow: hidden !important;
+            }
+            #calendar-view .calendar-day > span {
+                font-size: 0.7rem !important;
+            }
+            .month-pill {
+                font-size: 0.75rem !important;
+                padding: 8px 16px !important;
+            }
+
+            /* === WHITEBOARD === */
+            #whiteboard-view {
+                padding: 0.5rem !important;
+            }
+            #whiteboard-view > div:first-child {
+                flex-direction: column !important;
+                gap: 0.75rem !important;
+                margin-bottom: 0.75rem !important;
+                align-items: flex-start !important;
+            }
+            #whiteboard-view > div:first-child h2 {
+                font-size: 1.2rem !important;
+            }
+            #whiteboard-view > div:first-child > div:last-child {
+                flex-wrap: wrap !important;
+                padding: 8px 12px !important;
+                gap: 0.5rem !important;
+                width: 100% !important;
                 box-sizing: border-box !important;
             }
-            .btn-primary { display: none !important; } 
+            .color-dot {
+                width: 24px !important;
+                height: 24px !important;
+            }
+            #whiteboard-view canvas {
+                min-height: calc(100vh - 240px) !important;
+            }
+            #whiteboard-view div[style*="min-height"] {
+                min-height: calc(100vh - 240px) !important;
+                border-radius: 18px !important;
+            }
+
+            /* === SETTINGS === */
+            #settings-view {
+                padding: 1rem !important;
+            }
+            #settings-view h1 {
+                font-size: 1.4rem !important;
+                margin-bottom: 1.5rem !important;
+            }
+            #settings-view > div:nth-child(2) {
+                padding: 1.5rem !important;
+                border-radius: 20px !important;
+            }
+            #settings-view div[style*="display: flex; gap: 2rem"] {
+                flex-direction: column !important;
+                gap: 1rem !important;
+            }
+
+            /* === MODALS === */
+            .modal-content {
+                width: 92vw !important;
+                padding: 1.5rem !important;
+                border-radius: 24px !important;
+            }
+            #schedule-modal > div {
+                width: 92vw !important;
+                padding: 1.5rem !important;
+                border-radius: 24px !important;
+            }
+
+            /* === MEETING HEADER === */
+            .meeting-header {
+                flex-direction: column !important;
+                gap: 1rem !important;
+                margin-bottom: 1.5rem !important;
+            }
+            .meeting-info h2 {
+                font-size: 1.6rem !important;
+            }
+
+            /* === WAITING CARD === */
+            .waiting-card {
+                padding: 2rem !important;
+                border-radius: 20px !important;
+            }
+            .waiting-card h3 { font-size: 1.2rem !important; }
+            .waiting-card p { font-size: 0.9rem !important; }
+        }
+
+        /* === SMALL PHONE BREAKPOINT === */
+        @media (max-width: 480px) {
+            .controls-bar {
+                gap: 0.3rem !important;
+                height: 56px !important;
+                bottom: 8px !important;
+                left: 2% !important;
+                width: 96% !important;
+            }
+            .control-btn {
+                width: 36px !important;
+                height: 36px !important;
+                font-size: 0.85rem !important;
+            }
+            .control-btn.leave {
+                min-width: 70px !important;
+                font-size: 0.6rem !important;
+            }
+            #calendar-view .calendar-day {
+                height: 60px !important;
+                padding: 4px !important;
+                border-radius: 8px !important;
+            }
+            .chat-input { font-size: 16px !important; }
         }
     </style>
 </head>
@@ -1173,6 +1371,14 @@
             if(targetBtn) targetBtn.classList.add('active');
             
             if(v === 'whiteboard') setTimeout(initWhiteboard, 200);
+
+            // Auto-close sidebar on mobile after navigating
+            if(window.innerWidth <= 1024) {
+                const sb = document.getElementById('main-sidebar');
+                const ov = document.getElementById('sidebar-overlay');
+                if(sb) sb.classList.remove('mobile-open');
+                if(ov) ov.classList.remove('active');
+            }
         }
 
         // Whiteboard helpers remaining...
