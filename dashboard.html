@@ -1139,6 +1139,7 @@
 
         let isCameraOn = false;
         let isMicOn = false;
+        let myStream = null;
         let peer = null;
         let activeConnections = {}; 
         let activeCalls = {};       
@@ -1152,8 +1153,24 @@
         let drawing = false;
         let canvas, ctx; // GLOBAL REFERENCES
 
+        // --- SECURE CONTEXT CHECK (Camera/Mic require HTTPS on mobile) ---
+        if(!window.isSecureContext) {
+            console.warn('NOT A SECURE CONTEXT - Camera/Mic will be blocked by the browser.');
+        }
+
         async function initRealTime() {
             try {
+                // Guard: mediaDevices API requires HTTPS on mobile
+                if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    const msg = window.isSecureContext === false
+                        ? 'Camera/Mic requires HTTPS. Please host this site on GitHub Pages or a secure server.'
+                        : 'Your browser does not support camera/microphone access.';
+                    console.error(msg);
+                    // Show visible warning on the guest placeholder
+                    const ph = document.getElementById('guest-placeholder');
+                    if(ph) ph.innerHTML = `<p style="color:#ef4444; font-weight:800; font-size:0.75rem; padding:1rem;">${msg}</p>`;
+                    return;
+                }
                 // Mobile-friendly constraints: facingMode 'user' = front camera
                 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
                 const videoConstraints = isMobile
