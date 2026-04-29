@@ -538,6 +538,19 @@
                     
                     <div style="background: white; border-radius: 30px; border: 2px solid #e2e8f0; box-shadow: 0 20px 50px rgba(0,0,0,0.05); padding: 3rem; max-width: 800px;">
                         
+                        <!-- NEW: MOVED TO TOP FOR BETTER VISIBILITY -->
+                        <div style="margin-bottom: 3rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 2.5rem;">
+                            <h3 style="font-size: 1.2rem; color: #0f172a; margin-top: 0; margin-bottom: 1.5rem;">Camera Backgrounds</h3>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;" id="bg-gallery">
+                                <div onclick="selectBG('none', this)" class="bg-card active" style="aspect-ratio: 16/9; background: #f1f5f9; border: 3px solid #3b82f6; border-radius: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; color: #64748b; transition: 0.2s; -webkit-tap-highlight-color: transparent;">NONE</div>
+                                <div onclick="selectBG('blur', this)" class="bg-card" style="aspect-ratio: 16/9; background: #e2e8f0; border: 3px solid transparent; border-radius: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; color: #475569; backdrop-filter: blur(4px); transition: 0.2s; -webkit-tap-highlight-color: transparent;">BLUR</div>
+                                <div onclick="selectBG('space', this)" class="bg-card" style="aspect-ratio: 16/9; background: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=400'); background-size: cover; border: 3px solid transparent; border-radius: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.5); transition: 0.2s; -webkit-tap-highlight-color: transparent;">SPACE</div>
+                                <div onclick="document.getElementById('custom-bg-input').click()" class="bg-card" style="aspect-ratio: 16/9; background: #1e293b; border: 3px solid transparent; border-radius: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; color: white; transition: 0.2s; -webkit-tap-highlight-color: transparent;">+ CUSTOM</div>
+                                <input type="file" id="custom-bg-input" hidden accept="image/*" onchange="handleCustomBackground(event)">
+                            </div>
+                            <p id="bg-engine-status" style="font-size: 0.65rem; color: #94a3b8; margin-top: 1rem; font-weight: 700;">ENGINE: STANDBY</p>
+                        </div>
+
                         <div style="margin-bottom: 2.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 2.5rem;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                                 <h3 style="font-size: 1.2rem; color: #0f172a; margin: 0;">Audio & Video Devices</h3>
@@ -560,16 +573,6 @@
                             <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 1rem; font-weight: 600;">STATUS: Device names are hidden for security on local files. Upload to GitHub to reveal full names.</p>
                         </div>
 
-                        <div style="margin-bottom: 3rem;">
-                            <h3 style="font-size: 1.2rem; color: #0f172a; margin-top: 0; margin-bottom: 1.5rem;">Video Background</h3>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 1rem;">
-                                <div onclick="setVirtualBackground('none')" style="aspect-ratio: 16/9; background: #f1f5f9; border: 2px solid #3b82f6; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; color: #64748b;">NONE</div>
-                                <div onclick="setVirtualBackground('blur')" style="aspect-ratio: 16/9; background: #e2e8f0; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; color: #475569; backdrop-filter: blur(4px);">BLUR</div>
-                                <div onclick="setVirtualBackground('space')" style="aspect-ratio: 16/9; background: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=400'); background-size: cover; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">SPACE</div>
-                                <div onclick="document.getElementById('custom-bg-input').click()" style="aspect-ratio: 16/9; background: #1e293b; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; color: white;">+ CUSTOM</div>
-                                <input type="file" id="custom-bg-input" hidden accept="image/*" onchange="handleCustomBackground(event)">
-                            </div>
-                        </div>
 
                         <!-- General & Appearance Setting -->
                         <div style="margin-bottom: 2.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 2.5rem;">
@@ -1395,6 +1398,14 @@
         }
 
         async function setVirtualBackground(type) {
+            if (type !== 'none' && !selfieSegmentation) {
+                alert("AI Engine still warming up... please wait 2 seconds.");
+                return;
+            }
+            
+            const status = document.getElementById('bg-engine-status');
+            if(status) status.innerText = "ENGINE: " + type.toUpperCase();
+            
             currentBackgroundType = type;
             const videoEl = document.getElementById('user-video');
             
@@ -1411,6 +1422,18 @@
                 videoEl.srcObject = processedStream;
                 updateStreamForAll(processedStream);
             }
+        }
+
+        function selectBG(type, el) {
+            // Visual Update
+            document.querySelectorAll('.bg-card').forEach(card => {
+                card.style.borderColor = 'transparent';
+                card.classList.remove('active');
+            });
+            el.style.borderColor = '#3b82f6';
+            el.classList.add('active');
+            
+            setVirtualBackground(type);
         }
 
         function handleCustomBackground(event) {
