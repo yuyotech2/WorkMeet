@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="dashboard.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400..800&family=Inter:wght@400..800&family=JetBrains+Mono:wght@400..800&family=Rubik:wght@400..800&family=Manrope:wght@400..800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/selfie_segmentation.js" crossorigin="anonymous"></script>
     <style>
         .hidden { display: none !important; }
 
@@ -1419,43 +1419,29 @@
             try {
                 const canvas = document.getElementById('bg-processing-canvas');
                 const ctx = canvas.getContext('2d');
-                
-                // PERFORMANCE BOOST: Cap processing resolution (HD for Desktop, SD for Mobile)
-                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                const maxW = isMobile ? 480 : 1280;
-                const scale = results.image.width > maxW ? maxW / results.image.width : 1;
-                const w = Math.floor(results.image.width * scale);
-                const h = Math.floor(results.image.height * scale);
-                
-                canvas.width = w;
-                canvas.height = h;
-                offscreenCanvas.width = w;
-                offscreenCanvas.height = h;
+            const canvas = document.getElementById('bg-processing-canvas');
+            const ctx = canvas.getContext('2d');
+            if (!canvas || !ctx) return;
 
-                // 1. Prepare the Person (on offscreen canvas)
-                offscreenCtx.save();
-                offscreenCtx.clearRect(0, 0, w, h);
-                offscreenCtx.drawImage(results.image, 0, 0, w, h);
+            try {
+                const w = results.image.width;
+                const h = results.image.height;
                 
-                // Add a small blur to the mask to soften the edges (The 'Premium' look)
-                offscreenCtx.globalCompositeOperation = 'destination-in';
-                const blurAmount = isMobile ? 2 : 1; 
-                offscreenCtx.filter = `blur(${blurAmount}px)`; 
-                offscreenCtx.drawImage(results.segmentationMask, 0, 0, w, h);
-                offscreenCtx.filter = 'none';
-                offscreenCtx.restore();
+                // PERFORMANCE: Only resize if necessary
+                if (canvas.width !== w) {
+                    canvas.width = w; canvas.height = h;
+                    offscreenCanvas.width = w; offscreenCanvas.height = h;
+                }
 
-                // 2. Composite the final result
+                // STEP 1: Draw the chosen background to the MAIN canvas
                 ctx.save();
                 ctx.clearRect(0, 0, w, h);
                 
-                // Mirror if needed
                 if (isMirrorMode) {
                     ctx.translate(w, 0);
                     ctx.scale(-1, 1);
                 }
 
-                // Draw Background
                 if (currentBackgroundType === 'blur') {
                     ctx.filter = 'blur(15px)';
                     ctx.drawImage(results.image, 0, 0, w, h);
@@ -1463,18 +1449,28 @@
                 } else if (currentBackgroundType === 'space') {
                     ctx.drawImage(spaceBackgroundImage, 0, 0, w, h);
                 } else if (currentBackgroundType === 'green') {
-                    ctx.fillStyle = '#00ff00';
+                    ctx.fillStyle = '#00FF00';
                     ctx.fillRect(0, 0, w, h);
                 } else if (currentBackgroundType === 'custom' && customBackgroundImage) {
                     ctx.drawImage(customBackgroundImage, 0, 0, w, h);
                 }
 
-                // Draw the masked person on top
+                // STEP 2: Mask the person on the OFFSCREEN canvas
+                offscreenCtx.save();
+                offscreenCtx.clearRect(0, 0, w, h);
+                offscreenCtx.drawImage(results.segmentationMask, 0, 0, w, h);
+                offscreenCtx.globalCompositeOperation = 'source-in';
+                offscreenCtx.drawImage(results.image, 0, 0, w, h);
+                offscreenCtx.restore();
+
+                // STEP 3: Draw the masked person onto the background
                 ctx.drawImage(offscreenCanvas, 0, 0, w, h);
-                
                 ctx.restore();
+                
+                updateDebugStatus("AI ACTIVE - RENDERING");
             } catch(err) {
-                console.error("Segmentation result error:", err);
+                console.error("Critical Render Error:", err);
+                updateDebugStatus("RENDER ERROR: " + err.message);
             }
         }
 
