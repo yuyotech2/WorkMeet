@@ -1170,10 +1170,14 @@
         
         // --- VIRTUAL BACKGROUNDS ---
         let selfieSegmentation = null;
-        let currentBackgroundType = 'none'; // 'none', 'blur', 'space', 'custom'
+        let currentBackgroundType = 'none'; 
         let customBackgroundImage = null;
-        let processingCanvas = document.createElement('canvas');
-        let processingCtx = processingCanvas.getContext('2d');
+        let spaceBackgroundImage = new Image();
+        spaceBackgroundImage.crossOrigin = "anonymous";
+        spaceBackgroundImage.src = 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=1280';
+        
+        let processingCanvas = document.getElementById('bg-processing-canvas');
+        let processingCtx = null;
         let isProcessing = false;
         let originalStream = null;
         let processedStream = null;
@@ -1363,13 +1367,37 @@
         }
 
         async function processVideoFrame() {
-            if (isCameraOn && originalStream && (currentBackgroundType !== 'none')) {
-                const videoEl = document.getElementById('user-video');
-                if (videoEl.readyState >= 2) {
-                    await selfieSegmentation.send({image: videoEl});
+            if (!isCameraOn || !originalStream) {
+                requestAnimationFrame(processVideoFrame);
+                return;
+            }
+
+            const videoEl = document.getElementById('user-video');
+            const canvas = document.getElementById('bg-processing-canvas');
+            const ctx = canvas.getContext('2d');
+
+            if (videoEl.readyState >= 2) {
+                if (currentBackgroundType !== 'none' && selfieSegmentation) {
+                    // Try AI path
+                    try {
+                        await selfieSegmentation.send({image: videoEl});
+                    } catch(e) {
+                        console.error("AI Send Error:", e);
+                        drawFallback(videoEl, canvas, ctx);
+                    }
+                } else {
+                    // Raw path (No AI or AI disabled)
+                    drawFallback(videoEl, canvas, ctx);
                 }
             }
             requestAnimationFrame(processVideoFrame);
+        }
+
+        function drawFallback(video, canvas, ctx) {
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         }
 
         function onSegmentationResults(results) {
@@ -1398,22 +1426,12 @@
                     ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
                     ctx.filter = 'none';
                 } else if (currentBackgroundType === 'space') {
-                    const img = new Image();
-                    img.crossOrigin = "anonymous";
-                    img.src = 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=1280';
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(spaceBackgroundImage, 0, 0, canvas.width, canvas.height);
                 } else if (currentBackgroundType === 'custom' && customBackgroundImage) {
                     ctx.drawImage(customBackgroundImage, 0, 0, canvas.width, canvas.height);
                 }
 
                 ctx.restore();
-
-                // Update local preview if needed
-                if (!processedStream && currentBackgroundType !== 'none') {
-                    processedStream = canvas.captureStream(30);
-                    const audioTrack = originalStream.getAudioTracks()[0];
-                    if (audioTrack) processedStream.addTrack(audioTrack);
-                }
             } catch(err) {
                 console.error("Segmentation result error:", err);
             }
@@ -1450,6 +1468,8 @@
             
             if (!processedStream) {
                 const canvas = document.getElementById('bg-processing-canvas');
+                // Ensure initial frame is drawn
+                drawFallback(videoEl, canvas, canvas.getContext('2d'));
                 processedStream = canvas.captureStream(30);
                 const audioTrack = originalStream.getAudioTracks()[0];
                 if (audioTrack) processedStream.addTrack(audioTrack);
