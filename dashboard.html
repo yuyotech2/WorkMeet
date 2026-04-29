@@ -581,6 +581,16 @@
                             
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                                 <div>
+                                    <h4 style="margin: 0; color: #0f172a; font-size: 1.05rem;">Mirror My Video</h4>
+                                    <p style="margin: 5px 0 0 0; color: #64748b; font-size: 0.85rem;">Flip your video preview horizontally</p>
+                                </div>
+                                <div id="mirror-toggle-bg" onclick="toggleMirrorMode()" style="width: 50px; height: 26px; background: #3b82f6; border-radius: 15px; position: relative; cursor: pointer; transition: 0.3s;">
+                                    <div id="mirror-toggle-knob" style="width: 22px; height: 22px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.3s;"></div>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                                <div>
                                     <h4 style="margin: 0; color: #0f172a; font-size: 1.05rem;">Enable Dark Mode</h4>
                                     <p style="margin: 5px 0 0 0; color: #64748b; font-size: 0.85rem;">Switch application to dark theme</p>
                                 </div>
@@ -1177,10 +1187,11 @@
         spaceBackgroundImage.crossOrigin = "anonymous";
         spaceBackgroundImage.src = 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=1280';
         
+        let offscreenCanvas = document.createElement('canvas');
+        let offscreenCtx = offscreenCanvas.getContext('2d');
+        let isMirrorMode = true; 
+        
         let processingCanvas = document.getElementById('bg-processing-canvas');
-        let processingCtx = null;
-        let isProcessing = false;
-        let originalStream = null;
         let processedStream = null;
         
         // --- WHITEBOARD MEMORY (Safe Sync) ---
@@ -1406,40 +1417,48 @@
                 const canvas = document.getElementById('bg-processing-canvas');
                 const ctx = canvas.getContext('2d');
                 
-                canvas.width = results.image.width;
-                canvas.height = results.image.height;
+                const w = results.image.width;
+                const h = results.image.height;
+                canvas.width = w;
+                canvas.height = h;
+                offscreenCanvas.width = w;
+                offscreenCanvas.height = h;
 
+                // 1. Prepare the Person (on offscreen canvas)
+                offscreenCtx.save();
+                offscreenCtx.clearRect(0, 0, w, h);
+                offscreenCtx.drawImage(results.image, 0, 0, w, h);
+                offscreenCtx.globalCompositeOperation = 'destination-in';
+                offscreenCtx.drawImage(results.segmentationMask, 0, 0, w, h);
+                offscreenCtx.restore();
+
+                // 2. Composite the final result
                 ctx.save();
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.clearRect(0, 0, w, h);
                 
-                // 1. Draw the Background FIRST
-                if (currentBackgroundType === 'blur') {
-                    ctx.filter = 'blur(15px)';
-                    ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-                    ctx.filter = 'none';
-                } else if (currentBackgroundType === 'space') {
-                    ctx.drawImage(spaceBackgroundImage, 0, 0, canvas.width, canvas.height);
-                } else if (currentBackgroundType === 'green') {
-                    ctx.fillStyle = '#00ff00';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                } else if (currentBackgroundType === 'custom' && customBackgroundImage) {
-                    ctx.drawImage(customBackgroundImage, 0, 0, canvas.width, canvas.height);
+                // Mirror if needed
+                if (isMirrorMode) {
+                    ctx.translate(w, 0);
+                    ctx.scale(-1, 1);
                 }
 
-                // 2. Draw the Person (Clipped by mask)
-                // Create a temporary canvas for the mask to ensure perfect clipping
-                ctx.globalCompositeOperation = 'destination-out';
-                ctx.drawImage(results.segmentationMask, 0, 0, canvas.width, canvas.height);
-                
-                // Now we draw the ORIGINAL image, but it only shows where the mask was NOT black
-                // Wait, MediaPipe mask is white for person, black for background.
-                // destination-out removes where the mask is drawn.
-                // So we need to INVERT or use a different op.
-                
-                // CORRECT MOBILE APPROACH:
-                ctx.globalCompositeOperation = 'destination-atop';
-                ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+                // Draw Background
+                if (currentBackgroundType === 'blur') {
+                    ctx.filter = 'blur(15px)';
+                    ctx.drawImage(results.image, 0, 0, w, h);
+                    ctx.filter = 'none';
+                } else if (currentBackgroundType === 'space') {
+                    ctx.drawImage(spaceBackgroundImage, 0, 0, w, h);
+                } else if (currentBackgroundType === 'green') {
+                    ctx.fillStyle = '#00ff00';
+                    ctx.fillRect(0, 0, w, h);
+                } else if (currentBackgroundType === 'custom' && customBackgroundImage) {
+                    ctx.drawImage(customBackgroundImage, 0, 0, w, h);
+                }
 
+                // Draw the masked person on top
+                ctx.drawImage(offscreenCanvas, 0, 0, w, h);
+                
                 ctx.restore();
             } catch(err) {
                 console.error("Segmentation result error:", err);
@@ -1497,6 +1516,19 @@
             el.classList.add('active');
             
             setVirtualBackground(type);
+        }
+
+        function toggleMirrorMode() {
+            isMirrorMode = !isMirrorMode;
+            const bg = document.getElementById('mirror-toggle-bg');
+            const knob = document.getElementById('mirror-toggle-knob');
+            if (isMirrorMode) {
+                bg.style.background = '#3b82f6';
+                knob.style.right = '2px'; knob.style.left = 'auto';
+            } else {
+                bg.style.background = '#e2e8f0';
+                knob.style.left = '2px'; knob.style.right = 'auto';
+            }
         }
 
         function handleCustomBackground(event) {
