@@ -1360,13 +1360,16 @@
                     return `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`;
                 }});
 
+                // AUTO-DETECT POWER: Use High Precision for Desktop, Optimized for Mobile
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
                 selfieSegmentation.setOptions({
-                    modelSelection: 1, 
+                    modelSelection: isMobile ? 1 : 0, 
+                    selfieMode: false
                 });
 
                 selfieSegmentation.onResults(onSegmentationResults);
                 requestAnimationFrame(processVideoFrame);
-                updateDebugStatus("Background Engine Ready");
+                updateDebugStatus("Background Engine Ready (" + (isMobile ? "Mobile" : "HD") + ")");
             } catch(e) {
                 console.error(e);
                 updateDebugStatus("Engine Error: " + e.message);
@@ -1417,8 +1420,13 @@
                 const canvas = document.getElementById('bg-processing-canvas');
                 const ctx = canvas.getContext('2d');
                 
-                const w = results.image.width;
-                const h = results.image.height;
+                // PERFORMANCE BOOST: Cap processing resolution (HD for Desktop, SD for Mobile)
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                const maxW = isMobile ? 480 : 1280;
+                const scale = results.image.width > maxW ? maxW / results.image.width : 1;
+                const w = Math.floor(results.image.width * scale);
+                const h = Math.floor(results.image.height * scale);
+                
                 canvas.width = w;
                 canvas.height = h;
                 offscreenCanvas.width = w;
@@ -1428,8 +1436,13 @@
                 offscreenCtx.save();
                 offscreenCtx.clearRect(0, 0, w, h);
                 offscreenCtx.drawImage(results.image, 0, 0, w, h);
+                
+                // Add a small blur to the mask to soften the edges (The 'Premium' look)
                 offscreenCtx.globalCompositeOperation = 'destination-in';
+                const blurAmount = isMobile ? 2 : 1; 
+                offscreenCtx.filter = `blur(${blurAmount}px)`; 
                 offscreenCtx.drawImage(results.segmentationMask, 0, 0, w, h);
+                offscreenCtx.filter = 'none';
                 offscreenCtx.restore();
 
                 // 2. Composite the final result
