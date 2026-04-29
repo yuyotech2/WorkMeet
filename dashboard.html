@@ -1163,6 +1163,7 @@
         }
 
         async function initRealTime() {
+            if (peer) return; // ALREADY INITIALIZED
             try {
                 // Guard: mediaDevices API requires HTTPS on mobile
                 if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -1217,8 +1218,14 @@
 
                 peer.on('connection', (c) => handleData(c));
                 peer.on('call', (call) => {
-                    call.answer(myStream);
-                    handleCall(call);
+                    if (myStream) {
+                        call.answer(myStream);
+                        handleCall(call);
+                    } else {
+                        console.warn("[P2P] Answering call without local stream");
+                        call.answer(); // Still answer so connection stays alive
+                        handleCall(call);
+                    }
                 });
             } catch(e) {
                 console.error('Media access error:', e);
@@ -1241,16 +1248,18 @@
         }
 
         function handleData(c) {
-            activeConnections[c.peer] = c;
-            
             c.on('open', () => {
+                activeConnections[c.peer] = c;
+                
                 // ROSTER SYNC:
                 // If we are the host, send this new person the LIST of everyone else!
                 const hId = urlParams.get('host');
                 if(!hId) { 
+                    // Host logic: Introduce the new peer to everyone already in the room
                     const roster = Object.keys(activeConnections).filter(id => id !== c.peer);
                     c.send({type: 'welcome', roster: roster});
-                    // Also tell everyone else about this new person
+                    
+                    // Tell everyone else about this new person
                     broadcast({type: 'introduce', peerId: c.peer});
                 }
             });
@@ -1264,28 +1273,43 @@
                 if(data.type === 'file') appendMessage({ file: data.data, fileName: data.name, from: 'THEM' });
                 
                 if(data.type === 'welcome') {
-                    // We just joined! The host gave us a list of active students.
-                    // Connect with a small delay (staggered) to prevent lag spikes
+                    // We just joined! The host gave us a list of active participants.
+                    // To prevent race conditions, only call if our ID is 'smaller' than theirs.
                     data.roster.forEach((otherId, index) => {
-                        setTimeout(() => {
-                            if (otherId === peer.id) return;
-                            const call = peer.call(otherId, myStream);
-                            handleCall(call);
-                            const conn = peer.connect(otherId);
-                            handleData(conn);
-                        }, index * 200); // 200ms stagger between each person joining
+                        if (otherId === peer.id) return;
+                        
+                        // ID-based precedence: prevent both peers from calling each other
+                        if (peer.id < otherId) {
+                            console.log(`[P2P] Calling peer ${otherId} (Lower ID priority)`);
+                            setTimeout(() => {
+                                const call = peer.call(otherId, myStream);
+                                handleCall(call);
+                                const conn = peer.connect(otherId);
+                                handleData(conn);
+                            }, index * 300);
+                        }
                     });
                 }
 
-                if(data.type === 'introduce' && data.peerId !== peer.id) {
-                    // Host introduced us to someone new! Call them.
-                    const newCall = peer.call(data.peerId, myStream);
-                    handleCall(newCall);
-                    const newConn = peer.connect(data.peerId);
-                    handleData(newConn);
+                if(data.type === 'introduce') {
+                    // Host introduced us to someone new!
+                    const otherId = data.peerId;
+                    if (otherId === peer.id) return;
+
+                    // Only initiate if we have priority
+                    if (peer.id < otherId) {
+                        console.log(`[P2P] Connecting to introduced peer ${otherId}`);
+                        const newCall = peer.call(otherId, myStream);
+                        handleCall(newCall);
+                        const newConn = peer.connect(otherId);
+                        handleData(newConn);
+                    }
                 }
             });
-            c.on('close', () => removeParticipantFromGrid(c.peer));
+            c.on('close', () => {
+                removeParticipantFromGrid(c.peer);
+                delete activeConnections[c.peer];
+            });
         }
 
         function addParticipantToGrid(peerId, stream) {
@@ -1300,7 +1324,9 @@
                 <div class="participant-name-tag">GUEST (ID: ${peerId.substring(peerId.length - 4)})</div>
             `;
             grid.appendChild(box);
-            document.getElementById(`video-${peerId}`).srcObject = stream;
+            const v = document.getElementById(`video-${peerId}`);
+            v.srcObject = stream;
+            v.play().catch(e => console.warn("Video play failed:", e));
             
             // Hide the waiting placeholder
             const placeholder = document.getElementById('guest-placeholder-container');
