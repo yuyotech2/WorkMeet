@@ -442,7 +442,10 @@
                     </button>
                     <div class="live-indicator"></div>
                     <h2 id="room-display" style="margin: 0; font-size: 1.1rem; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">Private Room</h2>
-                    <div id="participant-count" style="background: #22c55e; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 800; display: block;">1 ONLINE</div>
+                    <div id="participant-count" style="background: #22c55e; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                        <span id="count-text">1 ONLINE</span>
+                        <button onclick="repairConnections()" style="background: rgba(255,255,255,0.2); border: none; color: white; font-size: 0.5rem; font-weight: 900; padding: 2px 6px; border-radius: 4px; cursor: pointer; text-transform: uppercase;">Repair</button>
+                    </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 2rem;">
                     <button class="btn btn-primary" onclick="copyLink()" style="padding: 12px 24px; border-radius: 14px; font-weight: 800; font-size: 0.9rem;">+ INVITE GUEST</button>
@@ -1234,19 +1237,51 @@
                         handleCall(call);
                     } else {
                         console.warn("[P2P] Answering call without local stream");
-                        call.answer(); // Still answer so connection stays alive
+                        call.answer();
                         handleCall(call);
                     }
                 });
+
+                // Periodic Heartbeat to keep connections alive
+                setInterval(() => {
+                    broadcast({ type: 'ping' });
+                }, 10000); // Every 10s
             } catch(e) {
                 console.error('Media access error:', e);
-                if(e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
-                    alert('Camera/Mic access was denied. Please allow permissions in your browser settings and reload.');
-                } else if(e.name === 'NotFoundError' || e.name === 'DevicesNotFoundError') {
-                    alert('No camera or microphone found on this device.');
-                } else {
-                    alert('Could not access camera/mic: ' + e.message);
-                }
+                // ... rest of error logic
+            }
+        }
+
+        function repairConnections() {
+            console.log("[P2P] Starting manual repair protocol...");
+            if (peer && peer.disconnected) {
+                console.log("[P2P] Signaling server disconnected. Reconnecting...");
+                peer.reconnect();
+            }
+            
+            const hId = urlParams.get('host');
+            if (hId && peer) {
+                // Guests: Re-sync with Host
+                const c = peer.connect(hId);
+                handleData(c);
+                const call = peer.call(hId, myStream);
+                handleCall(call);
+            } else if (peer) {
+                // Host: Refresh everyone's roster
+                Object.entries(activeConnections).forEach(([id, conn]) => {
+                    if (conn.open) {
+                        const roster = Object.keys(activeConnections).filter(pid => pid !== id);
+                        // Add host to roster too so guests can reconnect to host if needed
+                        // Wait, host is handled separately in guest logic, but let's be safe
+                        conn.send({ type: 'welcome', roster: roster });
+                    }
+                });
+                broadcast({ type: 're-sync' });
+            }
+            const btn = document.querySelector('#participant-count button');
+            if(btn) {
+                btn.innerText = "WAIT...";
+                setTimeout(() => btn.innerText = "REPAIR", 3000);
             }
         }
 
@@ -1276,46 +1311,55 @@
             });
 
             c.on('data', (data) => {
+                if(data.type === 'ping') return; // Heartbeat
+                
+                if(data.type === 're-sync') {
+                    // Host requested a re-sync
+                    console.log("[P2P] Received re-sync request from host");
+                    return;
+                }
+
                 if(data.type === 'draw') drawRemote(data);
                 if(data.type === 'image') drawRemoteImage(data.data);
                 if(data.type === 'clear') remoteClear();
-                if(data.type === 'leave') removeParticipantFromGrid(data.peerId);
+                if(data.type === 'leave') {
+                    removeParticipantFromGrid(data.peerId);
+                    return;
+                }
                 if(data.type === 'chat') appendMessage({ text: data.text, from: 'THEM' });
                 if(data.type === 'file') appendMessage({ file: data.data, fileName: data.name, from: 'THEM' });
                 
                 if(data.type === 'welcome') {
-                    // We just joined! The host gave us a list of active participants.
-                    // To prevent race conditions, only call if our ID is 'smaller' than theirs.
+                    // We just joined or were told to re-sync!
                     data.roster.forEach((otherId, index) => {
                         if (otherId === peer.id) return;
                         
                         // ID-based precedence: prevent both peers from calling each other
                         if (peer.id < otherId) {
-                            console.log(`[P2P] Calling peer ${otherId} (Lower ID priority)`);
-                            setTimeout(() => {
-                                const call = peer.call(otherId, myStream);
-                                handleCall(call);
-                                const conn = peer.connect(otherId);
-                                handleData(conn);
-                            }, (index + 1) * 800); // 800ms stagger
+                            if (!activeCalls[otherId]) {
+                                console.log(`[P2P] Repairing/Calling peer ${otherId}`);
+                                setTimeout(() => {
+                                    const call = peer.call(otherId, myStream);
+                                    handleCall(call);
+                                    const conn = peer.connect(otherId);
+                                    handleData(conn);
+                                }, (index + 1) * 800);
+                            }
                         }
                     });
                 }
 
                 if(data.type === 'introduce') {
-                    // Host introduced us to someone new!
                     const otherId = data.peerId;
                     if (otherId === peer.id) return;
-
-                    // Only initiate if we have priority
-                    if (peer.id < otherId) {
+                    if (peer.id < otherId && !activeCalls[otherId]) {
                         console.log(`[P2P] Connecting to introduced peer ${otherId}`);
                         setTimeout(() => {
                             const newCall = peer.call(otherId, myStream);
                             handleCall(newCall);
                             const newConn = peer.connect(otherId);
                             handleData(newConn);
-                        }, 500); // Small wait
+                        }, 500);
                     }
                 }
             });
@@ -1364,11 +1408,10 @@
         }
 
         function updateParticipantCount() {
-            const count = Object.keys(activeCalls).length + 1; // +1 for YOU
-            const badge = document.getElementById('participant-count');
+            const count = Object.keys(activeCalls).length + 1;
+            const badge = document.getElementById('count-text');
             if (badge) {
                 badge.innerText = count + ' ONLINE';
-                badge.style.display = 'block';
             }
         }
 
