@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="dashboard.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400..800&family=Inter:wght@400..800&family=JetBrains+Mono:wght@400..800&family=Rubik:wght@400..800&family=Manrope:wght@400..800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/selfie_segmentation.js" crossorigin="anonymous"></script>
     <style>
         .hidden { display: none !important; }
 
@@ -399,7 +398,7 @@
 </head>
 <body>
     <canvas id="particle-canvas"></canvas>
-    <canvas id="bg-processing-canvas" class="hidden"></canvas>
+    <canvas id="bg-processing-canvas" style="display:none; pointer-events:none;"></canvas>
     <div class="app-container">
         <!-- Sidebar Overlay for Mobile -->
         <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
@@ -1201,111 +1200,80 @@
         let penColor = '#0f172a';
         let penSize = 4;
         let drawing = false;
-        let canvas, ctx; // GLOBAL REFERENCES
-
-        // --- SECURE CONTEXT CHECK (Camera/Mic require HTTPS on mobile) ---
-        if(!window.isSecureContext) {
-            console.warn('NOT A SECURE CONTEXT - Camera/Mic will be blocked by the browser.');
-        }
+        let canvas, ctx;
 
         async function initRealTime() {
             if (peer) return; 
             try {
-                // TRY TO INIT SEGMENTATION (Safe fail)
-                try {
-                    initSelfieSegmentation();
-                } catch(err) {
-                    console.error("Selfie Segmentation failed to init:", err);
-                    updateDebugStatus("Background Engine failed to load: " + err.message);
-                }
-                
-                // Guard: mediaDevices API requires HTTPS on mobile
                 if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                     const msg = window.isSecureContext === false
                         ? 'Camera/Mic requires HTTPS. Please host this site on GitHub Pages or a secure server.'
                         : 'Your browser does not support camera/microphone access.';
                     console.error(msg);
-                    // Show visible warning on the guest placeholder
                     const ph = document.getElementById('guest-placeholder');
                     if(ph) ph.innerHTML = `<p style="color:#ef4444; font-weight:800; font-size:0.75rem; padding:1rem;">${msg}</p>`;
                     return;
                 }
-                // Mobile-friendly constraints: facingMode 'user' = front camera
-                const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-                const videoConstraints = isMobile
-                    ? { facingMode: 'user', width: { ideal: 320 }, height: { ideal: 240 }, frameRate: { ideal: 15 } }
-                    : { width: 640, height: 360, frameRate: 24 };
+
+                const videoConstraints = {
+                    width: { ideal: 640 },
+                    height: { ideal: 360 },
+                    frameRate: { max: 24 },
+                    facingMode: "user"
+                };
 
                 myStream = await navigator.mediaDevices.getUserMedia({
                     video: videoConstraints,
                     audio: true
                 });
-                originalStream = myStream;
                 
                 const videoEl = document.getElementById('user-video');
-                videoEl.srcObject = myStream;
-                videoEl.setAttribute('playsinline', 'true');
-                videoEl.setAttribute('autoplay', 'true');
-                videoEl.muted = true;
-                videoEl.play().catch(() => {});
+                if (videoEl) {
+                    videoEl.srcObject = myStream;
+                    videoEl.play().catch(e => console.warn("Auto-play blocked:", e));
+                }
 
                 isCameraOn = true; isMicOn = true;
-                document.getElementById('btn-video').classList.remove('off');
-                document.getElementById('btn-mic').classList.remove('off');
-                document.getElementById('camera-off-overlay').style.display = 'none';
                 
-                // POPULATE HARDWARE SELECTORS
-                await updateDeviceList();
+                initPeer();
                 
-                const myId = roomName.replace(/\s+/g, '') + '-' + Date.now() + '-' + Math.floor(Math.random()*1000);
-                peer = new Peer(myId, {
-                    config: {
-                        'iceServers': [
-                            { urls: 'stun:stun.l.google.com:19302' },
-                            { urls: 'stun:stun1.l.google.com:19302' },
-                            { urls: 'stun:stun.cloudflare.com:3478' },
-                            { urls: 'stun:stun.stunprotocol.org:3478' }
-                        ],
-                        'iceTransportPolicy': 'all'
-                    }
-                });
-                
-                peer.on('open', (id) => {
-                    console.log("PEER ONLINE: " + id);
-                    const hostId = urlParams.get('host');
-                    if(hostId && hostId !== id) {
-                        const call = peer.call(hostId, myStream);
-                        handleCall(call);
-                        const c = peer.connect(hostId);
-                        handleData(c);
-                    }
-                });
-
-                peer.on('connection', (c) => handleData(c));
-                peer.on('call', (call) => {
-                    if (myStream) {
-                        call.answer(myStream);
-                        handleCall(call);
-                    } else {
-                        console.warn("[P2P] Answering call without local stream");
-                        call.answer();
-                        handleCall(call);
-                    }
-                });
-
-                // Periodic Heartbeat to keep connections alive
-                setInterval(() => {
-                    broadcast({ type: 'ping' });
-                }, 10000); // Every 10s
+                setTimeout(() => { if (typeof initSelfieSegmentation === 'function') initSelfieSegmentation(); }, 2000);
             } catch(e) {
                 console.error('Media access error:', e);
-                // ... rest of error logic
             }
+        }
+
+        function initPeer() {
+            const myId = roomName.replace(/\s+/g, '') + '-' + Date.now() + '-' + Math.floor(Math.random()*1000);
+            peer = new Peer(myId, {
+                config: {
+                    'iceServers': [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' },
+                        { urls: 'stun:stun.cloudflare.com:3478' }
+                    ]
+                }
+            });
+
+            peer.on('open', (id) => {
+                const hId = urlParams.get('host');
+                if (hId) {
+                    const conn = peer.connect(hId);
+                    if(typeof handleData === 'function') handleData(conn);
+                    const call = peer.call(hId, myStream);
+                    if(typeof handleCall === 'function') handleCall(call);
+                }
+            });
+
+            if(typeof handleData === 'function') peer.on('connection', handleData);
+            peer.on('call', (call) => {
+                call.answer(myStream);
+                if(typeof handleCall === 'function') handleCall(call);
+            });
         }
 
         function repairConnections() {
             console.log("[P2P] Initiating Deep Mesh Repair...");
-            const hId = urlParams.get('host');
             
             // Clear existing boxes (except self)
             const grid = document.querySelector('.video-grid');
@@ -1349,18 +1317,33 @@
             }
         }
 
-        // --- VIRTUAL BACKGROUND ENGINE ---
+        // --- VIRTUAL BACKGROUND ENGINE (Dynamic Loading) ---
         function initSelfieSegmentation() {
             try {
                 if (typeof SelfieSegmentation === 'undefined') {
-                    throw new Error("MediaPipe Library not found. Check internet connection.");
+                    console.log("Loading AI Library...");
+                    const script = document.createElement('script');
+                    script.src = "https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js";
+                    script.onload = () => {
+                        console.log("AI Library Loaded.");
+                        startSegmentationEngine();
+                    };
+                    document.head.appendChild(script);
+                } else {
+                    startSegmentationEngine();
                 }
+            } catch(e) {
+                console.error("AI Loader Error:", e);
+                updateDebugStatus("Loader Error: " + e.message);
+            }
+        }
 
+        function startSegmentationEngine() {
+            try {
                 selfieSegmentation = new SelfieSegmentation({locateFile: (file) => {
                     return `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`;
                 }});
 
-                // AUTO-DETECT POWER: Use High Precision for Desktop, Optimized for Mobile
                 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
                 selfieSegmentation.setOptions({
                     modelSelection: isMobile ? 1 : 0, 
@@ -1369,10 +1352,10 @@
 
                 selfieSegmentation.onResults(onSegmentationResults);
                 requestAnimationFrame(processVideoFrame);
-                updateDebugStatus("Background Engine Ready (" + (isMobile ? "Mobile" : "HD") + ")");
+                updateDebugStatus("Ready");
             } catch(e) {
-                console.error(e);
-                updateDebugStatus("Engine Error: " + e.message);
+                console.error("Engine Start Error:", e);
+                updateDebugStatus("Error: " + e.message);
             }
         }
 
@@ -1416,9 +1399,6 @@
         }
 
         function onSegmentationResults(results) {
-            try {
-                const canvas = document.getElementById('bg-processing-canvas');
-                const ctx = canvas.getContext('2d');
             const canvas = document.getElementById('bg-processing-canvas');
             const ctx = canvas.getContext('2d');
             if (!canvas || !ctx) return;
@@ -1427,13 +1407,11 @@
                 const w = results.image.width;
                 const h = results.image.height;
                 
-                // PERFORMANCE: Only resize if necessary
                 if (canvas.width !== w) {
                     canvas.width = w; canvas.height = h;
                     offscreenCanvas.width = w; offscreenCanvas.height = h;
                 }
 
-                // STEP 1: Draw the chosen background to the MAIN canvas
                 ctx.save();
                 ctx.clearRect(0, 0, w, h);
                 
@@ -1455,7 +1433,6 @@
                     ctx.drawImage(customBackgroundImage, 0, 0, w, h);
                 }
 
-                // STEP 2: Mask the person on the OFFSCREEN canvas
                 offscreenCtx.save();
                 offscreenCtx.clearRect(0, 0, w, h);
                 offscreenCtx.drawImage(results.segmentationMask, 0, 0, w, h);
@@ -1463,14 +1440,12 @@
                 offscreenCtx.drawImage(results.image, 0, 0, w, h);
                 offscreenCtx.restore();
 
-                // STEP 3: Draw the masked person onto the background
                 ctx.drawImage(offscreenCanvas, 0, 0, w, h);
                 ctx.restore();
                 
-                updateDebugStatus("AI ACTIVE - RENDERING");
+                updateDebugStatus("Active");
             } catch(err) {
-                console.error("Critical Render Error:", err);
-                updateDebugStatus("RENDER ERROR: " + err.message);
+                console.error("Render Error:", err);
             }
         }
 
