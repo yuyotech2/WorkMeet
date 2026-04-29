@@ -6,7 +6,8 @@
     <title>MASTER DASHBOARD | Exo-Pulsar</title>
     <link rel="stylesheet" href="dashboard.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400..800&family=Inter:wght@400..800&family=JetBrains+Mono:wght@400..800&family=Rubik:wght@400..800&family=Manrope:wght@400..800&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation"></script>
     <style>
         .hidden { display: none !important; }
 
@@ -398,6 +399,7 @@
 </head>
 <body>
     <canvas id="particle-canvas"></canvas>
+    <canvas id="bg-processing-canvas" class="hidden"></canvas>
     <div class="app-container">
         <!-- Sidebar Overlay for Mobile -->
         <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
@@ -556,6 +558,17 @@
                                 </div>
                             </div>
                             <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 1rem; font-weight: 600;">STATUS: Device names are hidden for security on local files. Upload to GitHub to reveal full names.</p>
+                        </div>
+
+                        <div style="margin-bottom: 3rem;">
+                            <h3 style="font-size: 1.2rem; color: #0f172a; margin-top: 0; margin-bottom: 1.5rem;">Video Background</h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 1rem;">
+                                <div onclick="setVirtualBackground('none')" style="aspect-ratio: 16/9; background: #f1f5f9; border: 2px solid #3b82f6; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; color: #64748b;">NONE</div>
+                                <div onclick="setVirtualBackground('blur')" style="aspect-ratio: 16/9; background: #e2e8f0; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; color: #475569; backdrop-filter: blur(4px);">BLUR</div>
+                                <div onclick="setVirtualBackground('space')" style="aspect-ratio: 16/9; background: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=400'); background-size: cover; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">SPACE</div>
+                                <div onclick="document.getElementById('custom-bg-input').click()" style="aspect-ratio: 16/9; background: #1e293b; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; color: white;">+ CUSTOM</div>
+                                <input type="file" id="custom-bg-input" hidden accept="image/*" onchange="handleCustomBackground(event)">
+                            </div>
                         </div>
 
                         <!-- General & Appearance Setting -->
@@ -1152,6 +1165,16 @@
         let activeConnections = {}; 
         let activeCalls = {};       
         
+        // --- VIRTUAL BACKGROUNDS ---
+        let selfieSegmentation = null;
+        let currentBackgroundType = 'none'; // 'none', 'blur', 'space', 'custom'
+        let customBackgroundImage = null;
+        let processingCanvas = document.createElement('canvas');
+        let processingCtx = processingCanvas.getContext('2d');
+        let isProcessing = false;
+        let originalStream = null;
+        let processedStream = null;
+        
         // --- WHITEBOARD MEMORY (Safe Sync) ---
         let whiteboardLoaded = false;
         let lastX = 0;
@@ -1190,13 +1213,17 @@
                     video: videoConstraints,
                     audio: true
                 });
+                originalStream = myStream;
+                
                 const videoEl = document.getElementById('user-video');
                 videoEl.srcObject = myStream;
                 videoEl.setAttribute('playsinline', 'true');
                 videoEl.setAttribute('autoplay', 'true');
                 videoEl.muted = true;
-                // Force play (some mobile browsers need explicit play after srcObject set)
                 videoEl.play().catch(() => {});
+
+                // INIT SEGMENTATION
+                initSelfieSegmentation();
 
                 isCameraOn = true; isMicOn = true;
                 document.getElementById('btn-video').classList.remove('off');
@@ -1296,6 +1323,122 @@
                     updateParticipantCount();
                 }, 3000);
             }
+        }
+
+        // --- VIRTUAL BACKGROUND ENGINE ---
+        function initSelfieSegmentation() {
+            selfieSegmentation = new SelfieSegmentation({locateFile: (file) => {
+                return `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`;
+            }});
+
+            selfieSegmentation.setOptions({
+                modelSelection: 1, // 0 for general, 1 for landscape
+            });
+
+            selfieSegmentation.onResults(onSegmentationResults);
+
+            // Start processing loop if we have a stream
+            requestAnimationFrame(processVideoFrame);
+        }
+
+        async function processVideoFrame() {
+            if (isCameraOn && originalStream && (currentBackgroundType !== 'none')) {
+                const videoEl = document.getElementById('user-video');
+                if (videoEl.readyState >= 2) {
+                    await selfieSegmentation.send({image: videoEl});
+                }
+            }
+            requestAnimationFrame(processVideoFrame);
+        }
+
+        function onSegmentationResults(results) {
+            const canvas = document.getElementById('bg-processing-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = results.image.width;
+            canvas.height = results.image.height;
+
+            ctx.save();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw the mask
+            ctx.drawImage(results.segmentationMask, 0, 0, canvas.width, canvas.height);
+
+            // Setup composition
+            ctx.globalCompositeOperation = 'source-in';
+            ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+
+            // Draw Background
+            ctx.globalCompositeOperation = 'destination-over';
+            
+            if (currentBackgroundType === 'blur') {
+                ctx.filter = 'blur(15px)';
+                ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+                ctx.filter = 'none';
+            } else if (currentBackgroundType === 'space') {
+                const img = new Image();
+                img.src = 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=1280';
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            } else if (currentBackgroundType === 'custom' && customBackgroundImage) {
+                ctx.drawImage(customBackgroundImage, 0, 0, canvas.width, canvas.height);
+            }
+
+            ctx.restore();
+
+            // Update local preview if needed
+            if (!processedStream && currentBackgroundType !== 'none') {
+                processedStream = canvas.captureStream(30);
+                // Keep audio from original
+                const audioTrack = originalStream.getAudioTracks()[0];
+                if (audioTrack) processedStream.addTrack(audioTrack);
+            }
+        }
+
+        async function setVirtualBackground(type) {
+            currentBackgroundType = type;
+            const videoEl = document.getElementById('user-video');
+            
+            if (type === 'none') {
+                videoEl.srcObject = originalStream;
+                updateStreamForAll(originalStream);
+            } else {
+                if (!processedStream) {
+                    const canvas = document.getElementById('bg-processing-canvas');
+                    processedStream = canvas.captureStream(30);
+                    const audioTrack = originalStream.getAudioTracks()[0];
+                    if (audioTrack) processedStream.addTrack(audioTrack);
+                }
+                videoEl.srcObject = processedStream;
+                updateStreamForAll(processedStream);
+            }
+        }
+
+        function handleCustomBackground(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        customBackgroundImage = img;
+                        setVirtualBackground('custom');
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function updateStreamForAll(newStream) {
+            myStream = newStream; // Update global myStream so new callers get the right one
+            const videoTrack = newStream.getVideoTracks()[0];
+            
+            Object.values(activeCalls).forEach(call => {
+                const sender = call.peerConnection.getSenders().find(s => s.track.kind === 'video');
+                if (sender) {
+                    sender.replaceTrack(videoTrack);
+                }
+            });
         }
 
         function handleCall(call) {
