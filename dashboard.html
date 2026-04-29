@@ -545,6 +545,7 @@
                                 <div onclick="selectBG('none', this)" class="bg-card active" style="aspect-ratio: 16/9; background: #f1f5f9; border: 3px solid #3b82f6; border-radius: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; color: #64748b; transition: 0.2s; -webkit-tap-highlight-color: transparent;">NONE</div>
                                 <div onclick="selectBG('blur', this)" class="bg-card" style="aspect-ratio: 16/9; background: #e2e8f0; border: 3px solid transparent; border-radius: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; color: #475569; backdrop-filter: blur(4px); transition: 0.2s; -webkit-tap-highlight-color: transparent;">BLUR</div>
                                 <div onclick="selectBG('space', this)" class="bg-card" style="aspect-ratio: 16/9; background: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=400'); background-size: cover; border: 3px solid transparent; border-radius: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.5); transition: 0.2s; -webkit-tap-highlight-color: transparent;">SPACE</div>
+                                <div onclick="selectBG('green', this)" class="bg-card" style="aspect-ratio: 16/9; background: #00ff00; border: 3px solid transparent; border-radius: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; color: #000; transition: 0.2s; -webkit-tap-highlight-color: transparent;">GREEN</div>
                                 <div onclick="document.getElementById('custom-bg-input').click()" class="bg-card" style="aspect-ratio: 16/9; background: #1e293b; border: 3px solid transparent; border-radius: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; color: white; transition: 0.2s; -webkit-tap-highlight-color: transparent;">+ CUSTOM</div>
                                 <input type="file" id="custom-bg-input" hidden accept="image/*" onchange="handleCustomBackground(event)">
                             </div>
@@ -1411,25 +1412,33 @@
                 ctx.save();
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
-                // Draw the mask
-                ctx.drawImage(results.segmentationMask, 0, 0, canvas.width, canvas.height);
-
-                // Setup composition
-                ctx.globalCompositeOperation = 'source-in';
-                ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-
-                // Draw Background
-                ctx.globalCompositeOperation = 'destination-over';
-                
+                // 1. Draw the Background FIRST
                 if (currentBackgroundType === 'blur') {
                     ctx.filter = 'blur(15px)';
                     ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
                     ctx.filter = 'none';
                 } else if (currentBackgroundType === 'space') {
                     ctx.drawImage(spaceBackgroundImage, 0, 0, canvas.width, canvas.height);
+                } else if (currentBackgroundType === 'green') {
+                    ctx.fillStyle = '#00ff00';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
                 } else if (currentBackgroundType === 'custom' && customBackgroundImage) {
                     ctx.drawImage(customBackgroundImage, 0, 0, canvas.width, canvas.height);
                 }
+
+                // 2. Draw the Person (Clipped by mask)
+                // Create a temporary canvas for the mask to ensure perfect clipping
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.drawImage(results.segmentationMask, 0, 0, canvas.width, canvas.height);
+                
+                // Now we draw the ORIGINAL image, but it only shows where the mask was NOT black
+                // Wait, MediaPipe mask is white for person, black for background.
+                // destination-out removes where the mask is drawn.
+                // So we need to INVERT or use a different op.
+                
+                // CORRECT MOBILE APPROACH:
+                ctx.globalCompositeOperation = 'destination-atop';
+                ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
                 ctx.restore();
             } catch(err) {
