@@ -442,6 +442,7 @@
                     </button>
                     <div class="live-indicator"></div>
                     <h2 id="room-display" style="margin: 0; font-size: 1.1rem; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">Private Room</h2>
+                    <div id="participant-count" style="background: #22c55e; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 800; display: block;">1 ONLINE</div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 2rem;">
                     <button class="btn btn-primary" onclick="copyLink()" style="padding: 12px 24px; border-radius: 14px; font-weight: 800; font-size: 0.9rem;">+ INVITE GUEST</button>
@@ -1179,7 +1180,7 @@
                 // Mobile-friendly constraints: facingMode 'user' = front camera
                 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
                 const videoConstraints = isMobile
-                    ? { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 360 } }
+                    ? { facingMode: 'user', width: { ideal: 320 }, height: { ideal: 240 }, frameRate: { ideal: 15 } }
                     : { width: 640, height: 360, frameRate: 24 };
 
                 myStream = await navigator.mediaDevices.getUserMedia({
@@ -1203,7 +1204,17 @@
                 await updateDeviceList();
                 
                 const myId = roomName.replace(/\s+/g, '') + '-' + Date.now() + '-' + Math.floor(Math.random()*1000);
-                peer = new Peer(myId);
+                peer = new Peer(myId, {
+                    config: {
+                        'iceServers': [
+                            { url: 'stun:stun.l.google.com:19302' },
+                            { url: 'stun:stun1.l.google.com:19302' },
+                            { url: 'stun:stun2.l.google.com:19302' },
+                            { url: 'stun:stun3.l.google.com:19302' },
+                            { url: 'stun:stun4.l.google.com:19302' }
+                        ]
+                    }
+                });
                 
                 peer.on('open', (id) => {
                     console.log("PEER ONLINE: " + id);
@@ -1286,7 +1297,7 @@
                                 handleCall(call);
                                 const conn = peer.connect(otherId);
                                 handleData(conn);
-                            }, index * 300);
+                            }, (index + 1) * 800); // 800ms stagger
                         }
                     });
                 }
@@ -1299,10 +1310,12 @@
                     // Only initiate if we have priority
                     if (peer.id < otherId) {
                         console.log(`[P2P] Connecting to introduced peer ${otherId}`);
-                        const newCall = peer.call(otherId, myStream);
-                        handleCall(newCall);
-                        const newConn = peer.connect(otherId);
-                        handleData(newConn);
+                        setTimeout(() => {
+                            const newCall = peer.call(otherId, myStream);
+                            handleCall(newCall);
+                            const newConn = peer.connect(otherId);
+                            handleData(newConn);
+                        }, 500); // Small wait
                     }
                 }
             });
@@ -1331,6 +1344,8 @@
             // Hide the waiting placeholder
             const placeholder = document.getElementById('guest-placeholder-container');
             if (placeholder) placeholder.style.display = 'none';
+
+            updateParticipantCount();
         }
 
         function removeParticipantFromGrid(peerId) {
@@ -1343,6 +1358,17 @@
             if (Object.keys(activeCalls).length === 0) {
                 const placeholder = document.getElementById('guest-placeholder-container');
                 if (placeholder) placeholder.style.display = 'flex';
+            }
+
+            updateParticipantCount();
+        }
+
+        function updateParticipantCount() {
+            const count = Object.keys(activeCalls).length + 1; // +1 for YOU
+            const badge = document.getElementById('participant-count');
+            if (badge) {
+                badge.innerText = count + ' ONLINE';
+                badge.style.display = 'block';
             }
         }
 
