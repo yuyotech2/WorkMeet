@@ -1193,8 +1193,16 @@
         }
 
         async function initRealTime() {
-            if (peer) return; // ALREADY INITIALIZED
+            if (peer) return; 
             try {
+                // TRY TO INIT SEGMENTATION (Safe fail)
+                try {
+                    initSelfieSegmentation();
+                } catch(err) {
+                    console.error("Selfie Segmentation failed to init:", err);
+                    updateDebugStatus("Background Engine failed to load: " + err.message);
+                }
+                
                 // Guard: mediaDevices API requires HTTPS on mobile
                 if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                     const msg = window.isSecureContext === false
@@ -1224,9 +1232,6 @@
                 videoEl.setAttribute('autoplay', 'true');
                 videoEl.muted = true;
                 videoEl.play().catch(() => {});
-
-                // INIT SEGMENTATION
-                initSelfieSegmentation();
 
                 isCameraOn = true; isMicOn = true;
                 document.getElementById('btn-video').classList.remove('off');
@@ -1330,18 +1335,31 @@
 
         // --- VIRTUAL BACKGROUND ENGINE ---
         function initSelfieSegmentation() {
-            selfieSegmentation = new SelfieSegmentation({locateFile: (file) => {
-                return `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`;
-            }});
+            try {
+                if (typeof SelfieSegmentation === 'undefined') {
+                    throw new Error("MediaPipe Library not found. Check internet connection.");
+                }
 
-            selfieSegmentation.setOptions({
-                modelSelection: 1, // 0 for general, 1 for landscape
-            });
+                selfieSegmentation = new SelfieSegmentation({locateFile: (file) => {
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`;
+                }});
 
-            selfieSegmentation.onResults(onSegmentationResults);
+                selfieSegmentation.setOptions({
+                    modelSelection: 1, 
+                });
 
-            // Start processing loop if we have a stream
-            requestAnimationFrame(processVideoFrame);
+                selfieSegmentation.onResults(onSegmentationResults);
+                requestAnimationFrame(processVideoFrame);
+                updateDebugStatus("Background Engine Ready");
+            } catch(e) {
+                console.error(e);
+                updateDebugStatus("Engine Error: " + e.message);
+            }
+        }
+
+        function updateDebugStatus(msg) {
+            const el = document.getElementById('bg-engine-status');
+            if (el) el.innerText = "STATUS: " + msg;
         }
 
         async function processVideoFrame() {
@@ -1355,73 +1373,89 @@
         }
 
         function onSegmentationResults(results) {
-            const canvas = document.getElementById('bg-processing-canvas');
-            const ctx = canvas.getContext('2d');
-            
-            canvas.width = results.image.width;
-            canvas.height = results.image.height;
+            try {
+                const canvas = document.getElementById('bg-processing-canvas');
+                const ctx = canvas.getContext('2d');
+                
+                canvas.width = results.image.width;
+                canvas.height = results.image.height;
 
-            ctx.save();
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw the mask
-            ctx.drawImage(results.segmentationMask, 0, 0, canvas.width, canvas.height);
+                ctx.save();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw the mask
+                ctx.drawImage(results.segmentationMask, 0, 0, canvas.width, canvas.height);
 
-            // Setup composition
-            ctx.globalCompositeOperation = 'source-in';
-            ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-
-            // Draw Background
-            ctx.globalCompositeOperation = 'destination-over';
-            
-            if (currentBackgroundType === 'blur') {
-                ctx.filter = 'blur(15px)';
+                // Setup composition
+                ctx.globalCompositeOperation = 'source-in';
                 ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-                ctx.filter = 'none';
-            } else if (currentBackgroundType === 'space') {
-                const img = new Image();
-                img.src = 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=1280';
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            } else if (currentBackgroundType === 'custom' && customBackgroundImage) {
-                ctx.drawImage(customBackgroundImage, 0, 0, canvas.width, canvas.height);
-            }
 
-            ctx.restore();
+                // Draw Background
+                ctx.globalCompositeOperation = 'destination-over';
+                
+                if (currentBackgroundType === 'blur') {
+                    ctx.filter = 'blur(15px)';
+                    ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+                    ctx.filter = 'none';
+                } else if (currentBackgroundType === 'space') {
+                    const img = new Image();
+                    img.crossOrigin = "anonymous";
+                    img.src = 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=1280';
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                } else if (currentBackgroundType === 'custom' && customBackgroundImage) {
+                    ctx.drawImage(customBackgroundImage, 0, 0, canvas.width, canvas.height);
+                }
 
-            // Update local preview if needed
-            if (!processedStream && currentBackgroundType !== 'none') {
-                processedStream = canvas.captureStream(30);
-                // Keep audio from original
-                const audioTrack = originalStream.getAudioTracks()[0];
-                if (audioTrack) processedStream.addTrack(audioTrack);
-            }
-        }
+                ctx.restore();
 
-        async function setVirtualBackground(type) {
-            if (type !== 'none' && !selfieSegmentation) {
-                alert("AI Engine still warming up... please wait 2 seconds.");
-                return;
-            }
-            
-            const status = document.getElementById('bg-engine-status');
-            if(status) status.innerText = "ENGINE: " + type.toUpperCase();
-            
-            currentBackgroundType = type;
-            const videoEl = document.getElementById('user-video');
-            
-            if (type === 'none') {
-                videoEl.srcObject = originalStream;
-                updateStreamForAll(originalStream);
-            } else {
-                if (!processedStream) {
-                    const canvas = document.getElementById('bg-processing-canvas');
+                // Update local preview if needed
+                if (!processedStream && currentBackgroundType !== 'none') {
                     processedStream = canvas.captureStream(30);
                     const audioTrack = originalStream.getAudioTracks()[0];
                     if (audioTrack) processedStream.addTrack(audioTrack);
                 }
-                videoEl.srcObject = processedStream;
-                updateStreamForAll(processedStream);
+            } catch(err) {
+                console.error("Segmentation result error:", err);
             }
+        }
+
+        async function setVirtualBackground(type) {
+            const videoEl = document.getElementById('user-video');
+            const status = document.getElementById('bg-engine-status');
+            
+            if (type === 'none') {
+                currentBackgroundType = 'none';
+                videoEl.style.filter = 'none';
+                videoEl.srcObject = originalStream;
+                updateStreamForAll(originalStream);
+                if(status) status.innerText = "STATUS: NO BACKGROUND";
+                return;
+            }
+
+            if (!selfieSegmentation) {
+                console.warn("AI Engine missing - falling back to CSS Blur");
+                if (type === 'blur') {
+                    videoEl.style.filter = 'blur(10px)';
+                    if(status) status.innerText = "STATUS: BASIC BLUR (AI OFF)";
+                } else {
+                    alert("Advanced backgrounds require the AI engine. Please wait or check connection.");
+                }
+                return;
+            }
+            
+            if(status) status.innerText = "STATUS: ENGINE " + type.toUpperCase();
+            
+            currentBackgroundType = type;
+            videoEl.style.filter = 'none'; // Clear any fallback blur
+            
+            if (!processedStream) {
+                const canvas = document.getElementById('bg-processing-canvas');
+                processedStream = canvas.captureStream(30);
+                const audioTrack = originalStream.getAudioTracks()[0];
+                if (audioTrack) processedStream.addTrack(audioTrack);
+            }
+            videoEl.srcObject = processedStream;
+            updateStreamForAll(processedStream);
         }
 
         function selectBG(type, el) {
