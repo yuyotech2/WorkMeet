@@ -1210,12 +1210,12 @@
                 peer = new Peer(myId, {
                     config: {
                         'iceServers': [
-                            { url: 'stun:stun.l.google.com:19302' },
-                            { url: 'stun:stun1.l.google.com:19302' },
-                            { url: 'stun:stun2.l.google.com:19302' },
-                            { url: 'stun:stun3.l.google.com:19302' },
-                            { url: 'stun:stun4.l.google.com:19302' }
-                        ]
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:stun1.l.google.com:19302' },
+                            { urls: 'stun:stun.cloudflare.com:3478' },
+                            { urls: 'stun:stun.stunprotocol.org:3478' }
+                        ],
+                        'iceTransportPolicy': 'all'
                     }
                 });
                 
@@ -1253,35 +1253,48 @@
         }
 
         function repairConnections() {
-            console.log("[P2P] Starting manual repair protocol...");
-            if (peer && peer.disconnected) {
-                console.log("[P2P] Signaling server disconnected. Reconnecting...");
-                peer.reconnect();
-            }
-            
+            console.log("[P2P] Initiating Deep Mesh Repair...");
             const hId = urlParams.get('host');
+            
+            // Clear existing boxes (except self)
+            const grid = document.querySelector('.video-grid');
+            const boxes = grid.querySelectorAll('.participant-box');
+            boxes.forEach(box => {
+                if (!box.querySelector('#user-video')) {
+                    box.remove();
+                }
+            });
+            
+            // Reset local registries to force clean re-connections
+            activeCalls = {};
+            // Note: we keep activeConnections (data) alive to send the repair signals
+            
             if (hId && peer) {
-                // Guests: Re-sync with Host
+                // Guests: Reach out to host
                 const c = peer.connect(hId);
                 handleData(c);
                 const call = peer.call(hId, myStream);
                 handleCall(call);
             } else if (peer) {
-                // Host: Refresh everyone's roster
+                // Host: Force all guests to re-sync
                 Object.entries(activeConnections).forEach(([id, conn]) => {
                     if (conn.open) {
                         const roster = Object.keys(activeConnections).filter(pid => pid !== id);
-                        // Add host to roster too so guests can reconnect to host if needed
-                        // Wait, host is handled separately in guest logic, but let's be safe
+                        // Add host to the roster explicitly
+                        roster.push(peer.id);
                         conn.send({ type: 'welcome', roster: roster });
                     }
                 });
                 broadcast({ type: 're-sync' });
             }
+            
             const btn = document.querySelector('#participant-count button');
             if(btn) {
-                btn.innerText = "WAIT...";
-                setTimeout(() => btn.innerText = "REPAIR", 3000);
+                btn.innerText = "FIXING...";
+                setTimeout(() => {
+                    btn.innerText = "REPAIR";
+                    updateParticipantCount();
+                }, 3000);
             }
         }
 
@@ -1314,8 +1327,9 @@
                 if(data.type === 'ping') return; // Heartbeat
                 
                 if(data.type === 're-sync') {
-                    // Host requested a re-sync
-                    console.log("[P2P] Received re-sync request from host");
+                    console.log("[P2P] Host ordered a mesh re-sync");
+                    // Reset local call state to allow re-connection
+                    activeCalls = {};
                     return;
                 }
 
