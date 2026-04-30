@@ -1325,16 +1325,20 @@
             }
         }
 
-        // --- VIRTUAL BACKGROUND ENGINE (Dynamic Loading) ---
+        // --- VIRTUAL BACKGROUND ENGINE (Final Stability Build) ---
         function initSelfieSegmentation() {
             try {
                 if (typeof SelfieSegmentation === 'undefined') {
                     console.log("Loading AI Library...");
                     const script = document.createElement('script');
-                    script.src = "https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js";
+                    script.src = "https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1632777971/selfie_segmentation.js";
+                    script.crossOrigin = "anonymous";
                     script.onload = () => {
                         console.log("AI Library Loaded.");
                         startSegmentationEngine();
+                    };
+                    script.onerror = () => {
+                        updateDebugStatus("Library Load Failed. Check Internet.");
                     };
                     document.head.appendChild(script);
                 } else {
@@ -1348,8 +1352,12 @@
 
         function startSegmentationEngine() {
             try {
+                if(selfieSegmentation) {
+                    try { selfieSegmentation.close(); } catch(e){}
+                }
+                
                 selfieSegmentation = new SelfieSegmentation({locateFile: (file) => {
-                    return `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`;
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1632777971/${file}`;
                 }});
 
                 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -1359,8 +1367,7 @@
                 });
 
                 selfieSegmentation.onResults(onSegmentationResults);
-                requestAnimationFrame(processVideoFrame);
-                updateDebugStatus("Ready");
+                updateDebugStatus("Ready - Choose a filter!");
             } catch(e) {
                 console.error("Engine Start Error:", e);
                 updateDebugStatus("Error: " + e.message);
@@ -1413,6 +1420,8 @@
         }
 
         function onSegmentationResults(results) {
+            if (!results || !results.image || !results.segmentationMask) return;
+            
             const canvas = document.getElementById('bg-processing-canvas');
             const ctx = canvas.getContext('2d');
             if (!canvas || !ctx) return;
@@ -1434,6 +1443,7 @@
                     ctx.scale(-1, 1);
                 }
 
+                // 1. Draw BG
                 if (currentBackgroundType === 'blur') {
                     ctx.filter = 'blur(15px)';
                     ctx.drawImage(results.image, 0, 0, w, h);
@@ -1447,6 +1457,7 @@
                     ctx.drawImage(customBackgroundImage, 0, 0, w, h);
                 }
 
+                // 2. Draw Person
                 offscreenCtx.save();
                 offscreenCtx.clearRect(0, 0, w, h);
                 offscreenCtx.drawImage(results.segmentationMask, 0, 0, w, h);
@@ -1457,9 +1468,9 @@
                 ctx.drawImage(offscreenCanvas, 0, 0, w, h);
                 ctx.restore();
                 
-                updateDebugStatus("Active");
+                updateDebugStatus("Running (FPS: ~30)");
             } catch(err) {
-                console.error("Render Error:", err);
+                console.error("Critical Render Error:", err);
             }
         }
 
