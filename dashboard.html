@@ -1325,39 +1325,57 @@
             }
         }
 
-        // --- VIRTUAL BACKGROUND ENGINE (Final Stability Build) ---
+        let isAILoading = false;
         function initSelfieSegmentation() {
-            try {
-                if (typeof SelfieSegmentation === 'undefined') {
-                    console.log("Loading AI Library...");
-                    const script = document.createElement('script');
-                    script.src = "https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1632777971/selfie_segmentation.js";
-                    script.crossOrigin = "anonymous";
-                    script.onload = () => {
-                        console.log("AI Library Loaded.");
-                        startSegmentationEngine();
-                    };
-                    script.onerror = () => {
-                        updateDebugStatus("Library Load Failed. Check Internet.");
-                    };
-                    document.head.appendChild(script);
-                } else {
+            if (isAILoading || selfieSegmentation) return;
+            isAILoading = true;
+            updateDebugStatus("CONNECTING TO AI ENGINE...");
+            
+            // Set buttons to loading state
+            document.querySelectorAll('.bg-card').forEach(btn => {
+                if(btn.innerText !== 'NONE') btn.setAttribute('data-old-text', btn.innerText);
+                if(btn.innerText !== 'NONE') btn.innerText = 'LOADING...';
+            });
+
+            const tryLoad = (url, nextUrl) => {
+                const script = document.createElement('script');
+                script.src = url;
+                script.crossOrigin = "anonymous";
+                script.onload = () => {
+                    console.log("AI Library Loaded from: " + url);
                     startSegmentationEngine();
-                }
-            } catch(e) {
-                console.error("AI Loader Error:", e);
-                updateDebugStatus("Loader Error: " + e.message);
-            }
+                };
+                script.onerror = () => {
+                    if (nextUrl) {
+                        console.warn("Retrying with backup CDN...");
+                        tryLoad(nextUrl, null);
+                    } else {
+                        isAILoading = false;
+                        updateDebugStatus("LOAD FAILED. CHECK INTERNET.");
+                        restoreBGButtons();
+                    }
+                };
+                document.head.appendChild(script);
+            };
+
+            // Try JSDelivr first, then Unpkg
+            tryLoad(
+                "https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js",
+                "https://unpkg.com/@mediapipe/selfie_segmentation/selfie_segmentation.js"
+            );
+        }
+
+        function restoreBGButtons() {
+            document.querySelectorAll('.bg-card').forEach(btn => {
+                const old = btn.getAttribute('data-old-text');
+                if(old) btn.innerText = old;
+            });
         }
 
         function startSegmentationEngine() {
             try {
-                if(selfieSegmentation) {
-                    try { selfieSegmentation.close(); } catch(e){}
-                }
-                
                 selfieSegmentation = new SelfieSegmentation({locateFile: (file) => {
-                    return `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1632777971/${file}`;
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`;
                 }});
 
                 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -1367,10 +1385,18 @@
                 });
 
                 selfieSegmentation.onResults(onSegmentationResults);
-                updateDebugStatus("Ready - Choose a filter!");
+                isAILoading = false;
+                restoreBGButtons();
+                updateDebugStatus("READY (" + (isMobile ? "Mobile" : "HD") + ")");
+                
+                // APPLY PENDING CHOICE
+                if (pendingBackgroundType) {
+                    setVirtualBackground(pendingBackgroundType);
+                }
             } catch(e) {
                 console.error("Engine Start Error:", e);
-                updateDebugStatus("Error: " + e.message);
+                updateDebugStatus("START ERROR: " + e.message);
+                isAILoading = false;
             }
         }
 
@@ -1474,12 +1500,14 @@
             }
         }
 
+        let pendingBackgroundType = null;
         async function setVirtualBackground(type) {
             const videoEl = document.getElementById('user-video');
             const status = document.getElementById('bg-engine-status');
             
             if (type === 'none') {
                 currentBackgroundType = 'none';
+                pendingBackgroundType = null;
                 videoEl.style.filter = 'none';
                 videoEl.srcObject = originalStream;
                 updateStreamForAll(originalStream);
@@ -1488,24 +1516,25 @@
             }
 
             if (!selfieSegmentation) {
-                console.warn("AI Engine missing - falling back to CSS Blur");
+                pendingBackgroundType = type;
                 if (type === 'blur') {
                     videoEl.style.filter = 'blur(10px)';
-                    if(status) status.innerText = "STATUS: BASIC BLUR (AI OFF)";
+                    if(status) status.innerText = "STATUS: STARTING AI...";
                 } else {
-                    alert("Advanced backgrounds require the AI engine. Please wait or check connection.");
+                    if(status) status.innerText = "STATUS: WAITING FOR AI ENGINE...";
                 }
+                // Trigger init if not already loading
+                initSelfieSegmentation();
                 return;
             }
             
-            if(status) status.innerText = "STATUS: ENGINE " + type.toUpperCase();
+            if(status) status.innerText = "STATUS: " + type.toUpperCase();
             
             currentBackgroundType = type;
-            videoEl.style.filter = 'none'; // Clear any fallback blur
+            videoEl.style.filter = 'none'; 
             
             if (!processedStream) {
                 const canvas = document.getElementById('bg-processing-canvas');
-                // Ensure initial frame is drawn
                 drawFallback(videoEl, canvas, canvas.getContext('2d'));
                 processedStream = canvas.captureStream(30);
                 const audioTrack = originalStream.getAudioTracks()[0];
