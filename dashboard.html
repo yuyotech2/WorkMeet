@@ -1372,6 +1372,7 @@
             if (el) el.innerText = "STATUS: " + msg;
         }
 
+        let isAIBusy = false;
         async function processVideoFrame() {
             if (!isCameraOn || !originalStream) {
                 requestAnimationFrame(processVideoFrame);
@@ -1383,18 +1384,23 @@
             const ctx = canvas.getContext('2d');
 
             if (videoEl.readyState >= 2) {
-                if (currentBackgroundType !== 'none' && selfieSegmentation) {
-                    // Try AI path
+                // ONLY process if the AI is not already busy (prevents freezing)
+                if (currentBackgroundType !== 'none' && selfieSegmentation && !isAIBusy) {
                     try {
+                        isAIBusy = true;
+                        // Time-boxed send
                         await selfieSegmentation.send({image: videoEl});
                     } catch(e) {
-                        console.error("AI Send Error:", e);
+                        console.error("AI processing error:", e);
                         drawFallback(videoEl, canvas, ctx);
+                    } finally {
+                        isAIBusy = false;
                     }
-                } else {
-                    // Raw path (No AI or AI disabled)
+                } else if (currentBackgroundType === 'none') {
+                    // Raw path (No AI)
                     drawFallback(videoEl, canvas, ctx);
                 }
+                // If AI is busy, we just keep the previous frame drawn (prevents flickering)
             }
             requestAnimationFrame(processVideoFrame);
         }
