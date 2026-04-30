@@ -398,7 +398,6 @@
 </head>
 <body>
     <canvas id="particle-canvas"></canvas>
-    <canvas id="bg-processing-canvas" style="display:none; pointer-events:none;"></canvas>
     <div class="app-container">
         <!-- Sidebar Overlay for Mobile -->
         <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
@@ -537,19 +536,7 @@
                     
                     <div style="background: white; border-radius: 30px; border: 2px solid #e2e8f0; box-shadow: 0 20px 50px rgba(0,0,0,0.05); padding: 3rem; max-width: 800px;">
                         
-                        <!-- NEW: MOVED TO TOP FOR BETTER VISIBILITY -->
-                        <div style="margin-bottom: 3rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 2.5rem;">
-                            <h3 style="font-size: 1.2rem; color: #0f172a; margin-top: 0; margin-bottom: 1.5rem;">Camera Backgrounds</h3>
-                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;" id="bg-gallery">
-                                <div onclick="selectBG('none', this)" class="bg-card active" style="aspect-ratio: 16/9; background: #f1f5f9; border: 3px solid #3b82f6; border-radius: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; color: #64748b; transition: 0.2s; -webkit-tap-highlight-color: transparent;">NONE</div>
-                                <div onclick="selectBG('blur', this)" class="bg-card" style="aspect-ratio: 16/9; background: #e2e8f0; border: 3px solid transparent; border-radius: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; color: #475569; backdrop-filter: blur(4px); transition: 0.2s; -webkit-tap-highlight-color: transparent;">BLUR</div>
-                                <div onclick="selectBG('space', this)" class="bg-card" style="aspect-ratio: 16/9; background: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=400'); background-size: cover; border: 3px solid transparent; border-radius: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.5); transition: 0.2s; -webkit-tap-highlight-color: transparent;">SPACE</div>
-                                <div onclick="selectBG('green', this)" class="bg-card" style="aspect-ratio: 16/9; background: #00ff00; border: 3px solid transparent; border-radius: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; color: #000; transition: 0.2s; -webkit-tap-highlight-color: transparent;">GREEN</div>
-                                <div onclick="document.getElementById('custom-bg-input').click()" class="bg-card" style="aspect-ratio: 16/9; background: #1e293b; border: 3px solid transparent; border-radius: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; color: white; transition: 0.2s; -webkit-tap-highlight-color: transparent;">+ CUSTOM</div>
-                                <input type="file" id="custom-bg-input" hidden accept="image/*" onchange="handleCustomBackground(event)">
-                            </div>
-                            <p id="bg-engine-status" style="font-size: 0.65rem; color: #94a3b8; margin-top: 1rem; font-weight: 700;">ENGINE: STANDBY</p>
-                        </div>
+                        <!-- General & Appearance Setting -->
 
                         <div style="margin-bottom: 2.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 2.5rem;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
@@ -574,20 +561,9 @@
                         </div>
 
 
-                        <!-- General & Appearance Setting -->
                         <div style="margin-bottom: 2.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 2.5rem;">
                             <h3 style="font-size: 1.2rem; color: #0f172a; margin-top: 0; margin-bottom: 1.5rem;">General Options</h3>
                             
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                                <div>
-                                    <h4 style="margin: 0; color: #0f172a; font-size: 1.05rem;">Mirror My Video</h4>
-                                    <p style="margin: 5px 0 0 0; color: #64748b; font-size: 0.85rem;">Flip your video preview horizontally</p>
-                                </div>
-                                <div id="mirror-toggle-bg" onclick="toggleMirrorMode()" style="width: 50px; height: 26px; background: #3b82f6; border-radius: 15px; position: relative; cursor: pointer; transition: 0.3s;">
-                                    <div id="mirror-toggle-knob" style="width: 22px; height: 22px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.3s;"></div>
-                                </div>
-                            </div>
-
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                                 <div>
                                     <h4 style="margin: 0; color: #0f172a; font-size: 1.05rem;">Enable Dark Mode</h4>
@@ -1178,20 +1154,6 @@
         let activeConnections = {}; 
         let activeCalls = {};       
         
-        // --- VIRTUAL BACKGROUNDS ---
-        let selfieSegmentation = null;
-        let currentBackgroundType = 'none'; 
-        let customBackgroundImage = null;
-        let spaceBackgroundImage = new Image();
-        spaceBackgroundImage.crossOrigin = "anonymous";
-        spaceBackgroundImage.src = 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=1280';
-        
-        let offscreenCanvas = document.createElement('canvas');
-        let offscreenCtx = offscreenCanvas.getContext('2d');
-        let isMirrorMode = true; 
-        
-        let processingCanvas = document.getElementById('bg-processing-canvas');
-        let processedStream = null;
         
         // --- WHITEBOARD MEMORY (Safe Sync) ---
         let whiteboardLoaded = false;
@@ -1226,25 +1188,17 @@
                     video: videoConstraints,
                     audio: true
                 });
-                originalStream = myStream; // RESTORED
                 
                 const videoEl = document.getElementById('user-video');
                 if (videoEl) {
                     videoEl.srcObject = myStream;
                     videoEl.play().catch(e => {
                         console.warn("Auto-play blocked:", e);
-                        // Show manual start button if blocked
-                        document.getElementById('camera-off-overlay').innerHTML = `
-                            <button onclick="initRealTime()" class="btn btn-primary">START CAMERA</button>
-                        `;
                     });
                 }
 
                 isCameraOn = true; isMicOn = true;
-                
                 initPeer();
-                
-                setTimeout(() => { if (typeof initSelfieSegmentation === 'function') initSelfieSegmentation(); }, 2000);
             } catch(e) {
                 console.error('Media access error:', e);
                 const ph = document.getElementById('guest-placeholder');
@@ -1325,265 +1279,6 @@
             }
         }
 
-        let isAILoading = false;
-        function initSelfieSegmentation() {
-            if (isAILoading || selfieSegmentation) return;
-            isAILoading = true;
-            updateDebugStatus("CONNECTING TO AI ENGINE...");
-            
-            // Set buttons to loading state
-            document.querySelectorAll('.bg-card').forEach(btn => {
-                if(btn.innerText !== 'NONE') btn.setAttribute('data-old-text', btn.innerText);
-                if(btn.innerText !== 'NONE') btn.innerText = 'LOADING...';
-            });
-
-            const tryLoad = (url, nextUrl) => {
-                const script = document.createElement('script');
-                script.src = url;
-                script.crossOrigin = "anonymous";
-                script.onload = () => {
-                    console.log("AI Library Loaded from: " + url);
-                    startSegmentationEngine();
-                };
-                script.onerror = () => {
-                    if (nextUrl) {
-                        console.warn("Retrying with backup CDN...");
-                        tryLoad(nextUrl, null);
-                    } else {
-                        isAILoading = false;
-                        updateDebugStatus("LOAD FAILED. CHECK INTERNET.");
-                        restoreBGButtons();
-                    }
-                };
-                document.head.appendChild(script);
-            };
-
-            // Try JSDelivr first, then Unpkg
-            tryLoad(
-                "https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js",
-                "https://unpkg.com/@mediapipe/selfie_segmentation/selfie_segmentation.js"
-            );
-        }
-
-        function restoreBGButtons() {
-            document.querySelectorAll('.bg-card').forEach(btn => {
-                const old = btn.getAttribute('data-old-text');
-                if(old) btn.innerText = old;
-            });
-        }
-
-        function startSegmentationEngine() {
-            try {
-                selfieSegmentation = new SelfieSegmentation({locateFile: (file) => {
-                    return `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`;
-                }});
-
-                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                selfieSegmentation.setOptions({
-                    modelSelection: isMobile ? 1 : 0, 
-                    selfieMode: false
-                });
-
-                selfieSegmentation.onResults(onSegmentationResults);
-                isAILoading = false;
-                restoreBGButtons();
-                updateDebugStatus("READY (" + (isMobile ? "Mobile" : "HD") + ")");
-                
-                // APPLY PENDING CHOICE
-                if (pendingBackgroundType) {
-                    setVirtualBackground(pendingBackgroundType);
-                }
-            } catch(e) {
-                console.error("Engine Start Error:", e);
-                updateDebugStatus("START ERROR: " + e.message);
-                isAILoading = false;
-            }
-        }
-
-        function updateDebugStatus(msg) {
-            const el = document.getElementById('bg-engine-status');
-            if (el) el.innerText = "STATUS: " + msg;
-        }
-
-        let isAIBusy = false;
-        async function processVideoFrame() {
-            if (!isCameraOn || !originalStream) {
-                requestAnimationFrame(processVideoFrame);
-                return;
-            }
-
-            const videoEl = document.getElementById('user-video');
-            const canvas = document.getElementById('bg-processing-canvas');
-            const ctx = canvas.getContext('2d');
-
-            if (videoEl.readyState >= 2) {
-                // ONLY process if the AI is not already busy (prevents freezing)
-                if (currentBackgroundType !== 'none' && selfieSegmentation && !isAIBusy) {
-                    try {
-                        isAIBusy = true;
-                        // Time-boxed send
-                        await selfieSegmentation.send({image: videoEl});
-                    } catch(e) {
-                        console.error("AI processing error:", e);
-                        drawFallback(videoEl, canvas, ctx);
-                    } finally {
-                        isAIBusy = false;
-                    }
-                } else if (currentBackgroundType === 'none') {
-                    // Raw path (No AI)
-                    drawFallback(videoEl, canvas, ctx);
-                }
-                // If AI is busy, we just keep the previous frame drawn (prevents flickering)
-            }
-            requestAnimationFrame(processVideoFrame);
-        }
-
-        function drawFallback(video, canvas, ctx) {
-            canvas.width = video.videoWidth || 640;
-            canvas.height = video.videoHeight || 480;
-            ctx.clearRect(0,0, canvas.width, canvas.height);
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        }
-
-        function onSegmentationResults(results) {
-            if (!results || !results.image || !results.segmentationMask) return;
-            
-            const canvas = document.getElementById('bg-processing-canvas');
-            const ctx = canvas.getContext('2d');
-            if (!canvas || !ctx) return;
-
-            try {
-                const w = results.image.width;
-                const h = results.image.height;
-                
-                if (canvas.width !== w) {
-                    canvas.width = w; canvas.height = h;
-                    offscreenCanvas.width = w; offscreenCanvas.height = h;
-                }
-
-                ctx.save();
-                ctx.clearRect(0, 0, w, h);
-                
-                if (isMirrorMode) {
-                    ctx.translate(w, 0);
-                    ctx.scale(-1, 1);
-                }
-
-                // 1. Draw BG
-                if (currentBackgroundType === 'blur') {
-                    ctx.filter = 'blur(15px)';
-                    ctx.drawImage(results.image, 0, 0, w, h);
-                    ctx.filter = 'none';
-                } else if (currentBackgroundType === 'space') {
-                    ctx.drawImage(spaceBackgroundImage, 0, 0, w, h);
-                } else if (currentBackgroundType === 'green') {
-                    ctx.fillStyle = '#00FF00';
-                    ctx.fillRect(0, 0, w, h);
-                } else if (currentBackgroundType === 'custom' && customBackgroundImage) {
-                    ctx.drawImage(customBackgroundImage, 0, 0, w, h);
-                }
-
-                // 2. Draw Person
-                offscreenCtx.save();
-                offscreenCtx.clearRect(0, 0, w, h);
-                offscreenCtx.drawImage(results.segmentationMask, 0, 0, w, h);
-                offscreenCtx.globalCompositeOperation = 'source-in';
-                offscreenCtx.drawImage(results.image, 0, 0, w, h);
-                offscreenCtx.restore();
-
-                ctx.drawImage(offscreenCanvas, 0, 0, w, h);
-                ctx.restore();
-                
-                updateDebugStatus("Running (FPS: ~30)");
-            } catch(err) {
-                console.error("Critical Render Error:", err);
-            }
-        }
-
-        let pendingBackgroundType = null;
-        async function setVirtualBackground(type) {
-            const videoEl = document.getElementById('user-video');
-            const status = document.getElementById('bg-engine-status');
-            
-            if (type === 'none') {
-                currentBackgroundType = 'none';
-                pendingBackgroundType = null;
-                videoEl.style.filter = 'none';
-                videoEl.srcObject = originalStream;
-                updateStreamForAll(originalStream);
-                if(status) status.innerText = "STATUS: NO BACKGROUND";
-                return;
-            }
-
-            if (!selfieSegmentation) {
-                pendingBackgroundType = type;
-                if (type === 'blur') {
-                    videoEl.style.filter = 'blur(10px)';
-                    if(status) status.innerText = "STATUS: STARTING AI...";
-                } else {
-                    if(status) status.innerText = "STATUS: WAITING FOR AI ENGINE...";
-                }
-                // Trigger init if not already loading
-                initSelfieSegmentation();
-                return;
-            }
-            
-            if(status) status.innerText = "STATUS: " + type.toUpperCase();
-            
-            currentBackgroundType = type;
-            videoEl.style.filter = 'none'; 
-            
-            if (!processedStream) {
-                const canvas = document.getElementById('bg-processing-canvas');
-                drawFallback(videoEl, canvas, canvas.getContext('2d'));
-                processedStream = canvas.captureStream(30);
-                const audioTrack = originalStream.getAudioTracks()[0];
-                if (audioTrack) processedStream.addTrack(audioTrack);
-            }
-            videoEl.srcObject = processedStream;
-            updateStreamForAll(processedStream);
-        }
-
-        function selectBG(type, el) {
-            // Visual Update
-            document.querySelectorAll('.bg-card').forEach(card => {
-                card.style.borderColor = 'transparent';
-                card.classList.remove('active');
-            });
-            el.style.borderColor = '#3b82f6';
-            el.classList.add('active');
-            
-            setVirtualBackground(type);
-        }
-
-        function toggleMirrorMode() {
-            isMirrorMode = !isMirrorMode;
-            const bg = document.getElementById('mirror-toggle-bg');
-            const knob = document.getElementById('mirror-toggle-knob');
-            if (isMirrorMode) {
-                bg.style.background = '#3b82f6';
-                knob.style.right = '2px'; knob.style.left = 'auto';
-            } else {
-                bg.style.background = '#e2e8f0';
-                knob.style.left = '2px'; knob.style.right = 'auto';
-            }
-        }
-
-        function handleCustomBackground(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        customBackgroundImage = img;
-                        setVirtualBackground('custom');
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        }
 
         function updateStreamForAll(newStream) {
             myStream = newStream; // Update global myStream so new callers get the right one
