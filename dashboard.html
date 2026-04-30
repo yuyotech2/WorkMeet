@@ -1226,11 +1226,18 @@
                     video: videoConstraints,
                     audio: true
                 });
+                originalStream = myStream; // RESTORED
                 
                 const videoEl = document.getElementById('user-video');
                 if (videoEl) {
                     videoEl.srcObject = myStream;
-                    videoEl.play().catch(e => console.warn("Auto-play blocked:", e));
+                    videoEl.play().catch(e => {
+                        console.warn("Auto-play blocked:", e);
+                        // Show manual start button if blocked
+                        document.getElementById('camera-off-overlay').innerHTML = `
+                            <button onclick="initRealTime()" class="btn btn-primary">START CAMERA</button>
+                        `;
+                    });
                 }
 
                 isCameraOn = true; isMicOn = true;
@@ -1240,6 +1247,8 @@
                 setTimeout(() => { if (typeof initSelfieSegmentation === 'function') initSelfieSegmentation(); }, 2000);
             } catch(e) {
                 console.error('Media access error:', e);
+                const ph = document.getElementById('guest-placeholder');
+                if(ph) ph.innerHTML = `<p style="color:#ef4444; font-weight:800; font-size:0.75rem; padding:1rem;">Access Denied: ${e.message}</p>`;
             }
         }
 
@@ -1274,6 +1283,7 @@
 
         function repairConnections() {
             console.log("[P2P] Initiating Deep Mesh Repair...");
+            const hostId = urlParams.get('host');
             
             // Clear existing boxes (except self)
             const grid = document.querySelector('.video-grid');
@@ -1286,20 +1296,18 @@
             
             // Reset local registries to force clean re-connections
             activeCalls = {};
-            // Note: we keep activeConnections (data) alive to send the repair signals
             
-            if (hId && peer) {
+            if (hostId && peer) {
                 // Guests: Reach out to host
-                const c = peer.connect(hId);
+                const c = peer.connect(hostId);
                 handleData(c);
-                const call = peer.call(hId, myStream);
+                const call = peer.call(hostId, myStream);
                 handleCall(call);
             } else if (peer) {
                 // Host: Force all guests to re-sync
                 Object.entries(activeConnections).forEach(([id, conn]) => {
                     if (conn.open) {
                         const roster = Object.keys(activeConnections).filter(pid => pid !== id);
-                        // Add host to the roster explicitly
                         roster.push(peer.id);
                         conn.send({ type: 'welcome', roster: roster });
                     }
