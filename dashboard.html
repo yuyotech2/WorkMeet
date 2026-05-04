@@ -1140,18 +1140,7 @@
             </footer>
         </aside>
 
-        <!-- Username Modal -->
-        <div id="name-modal" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s ease;">
-            <div style="background: white; padding: 3rem; border-radius: 30px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
-                <div style="width: 80px; height: 80px; background: #f1f5f9; border-radius: 24px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                </div>
-                <h2 style="margin-bottom: 0.5rem; color: #0f172a;">Identity</h2>
-                <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 2rem;">How should others see you?</p>
-                <input type="text" id="user-name-input" placeholder="Your Name" style="width: 100%; padding: 15px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 1rem; margin-bottom: 1.5rem; outline: none; transition: border-color 0.2s;" onkeypress="if(event.key === 'Enter') submitName()">
-                <button onclick="submitName()" style="width: 100%; background: #0f172a; color: white; padding: 15px; border-radius: 12px; font-weight: 800; cursor: pointer; border: none; transition: transform 0.2s;">ENTER WORKSPACE</button>
-            </div>
-        </div>
+        </aside>
     </div>
 
     <script>
@@ -2179,6 +2168,28 @@
         window.addEventListener('resize', () => {
             if(document.getElementById('whiteboard-view').classList.contains('hidden')) return;
             initWhiteboard();
+        });
+    </script>
+
+    <!-- Identity Modal (Root Level) -->
+    <div id="name-modal" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); z-index: 99999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s ease; pointer-events: all;">
+        <div style="background: white; padding: 3rem; border-radius: 30px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+            <div style="width: 80px; height: 80px; background: #f1f5f9; border-radius: 24px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+            <h2 style="margin-bottom: 0.5rem; color: #0f172a;">Identity</h2>
+            <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 2rem;">How should others see you?</p>
+            <input type="text" id="user-name-input" placeholder="Your Name" style="width: 100%; padding: 15px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 1rem; margin-bottom: 1.5rem; outline: none; transition: border-color 0.2s;" onkeypress="if(event.key === 'Enter') submitName()">
+            <button onclick="submitName()" style="width: 100%; background: #0f172a; color: white; padding: 15px; border-radius: 12px; font-weight: 800; cursor: pointer; border: none; transition: transform 0.2s;">ENTER WORKSPACE</button>
+        </div>
+    </div>
+    <script>
+        // Auto-focus the input
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const inp = document.getElementById('user-name-input');
+                if(inp) inp.focus();
+            }, 100);
         });
     </script>
 </body>
