@@ -1346,13 +1346,7 @@
                 }, 10000); // Every 10s
             } catch(e) {
                 console.error('Media access error:', e);
-                if(e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
-                    alert('🚨 PERMISSION BLOCKED: Your browser is blocking the camera. Please click the "Camera Icon" in your address bar (near the URL) and select "Always Allow", then refresh the page.');
-                } else if(e.name === 'NotFoundError' || e.name === 'DevicesNotFoundError') {
-                    alert('No camera or microphone found on this device.');
-                } else {
-                    alert('Could not access camera/mic: ' + e.message);
-                }
+                // Silently fail so the user can still use chat/whiteboard if camera is blocked
             }
         }
 
