@@ -45,9 +45,11 @@ body {
 /* Sidebar */
 .sidebar {
     width: 280px;
-    background: #ffffff; /* Crisp white sidebar */
-    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.03);
-    border-right: none;
+    background: rgba(255, 255, 255, 0.8); /* Glassmorphism sidebar */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.05);
+    border-right: 1px solid rgba(255, 255, 255, 0.3);
     display: flex;
     flex-direction: column;
     padding: 1.5rem;
