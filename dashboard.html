@@ -1139,6 +1139,19 @@
                 </div>
             </footer>
         </aside>
+
+        <!-- Username Modal -->
+        <div id="name-modal" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s ease;">
+            <div style="background: white; padding: 3rem; border-radius: 30px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+                <div style="width: 80px; height: 80px; background: #f1f5f9; border-radius: 24px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </div>
+                <h2 style="margin-bottom: 0.5rem; color: #0f172a;">Identity</h2>
+                <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 2rem;">How should others see you?</p>
+                <input type="text" id="user-name-input" placeholder="Your Name" style="width: 100%; padding: 15px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 1rem; margin-bottom: 1.5rem; outline: none; transition: border-color 0.2s;" onkeypress="if(event.key === 'Enter') submitName()">
+                <button onclick="submitName()" style="width: 100%; background: #0f172a; color: white; padding: 15px; border-radius: 12px; font-weight: 800; cursor: pointer; border: none; transition: transform 0.2s;">ENTER WORKSPACE</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1146,12 +1159,14 @@
         const roomName = urlParams.get('room') || 'Private Room';
         document.getElementById('room-display').innerText = roomName;
 
+        let userName = "Guest";
         let isCameraOn = false;
         let isMicOn = false;
         let myStream = null;
         let peer = null;
         let activeConnections = {}; 
-        let activeCalls = {};       
+        let activeCalls = {};
+        let peerNames = {}; // Store names of other participants
         
         // --- WHITEBOARD MEMORY (Safe Sync) ---
         let whiteboardLoaded = false;
@@ -1165,6 +1180,19 @@
         // --- SECURE CONTEXT CHECK (Camera/Mic require HTTPS on mobile) ---
         if(!window.isSecureContext) {
             console.warn('NOT A SECURE CONTEXT - Camera/Mic will be blocked by the browser.');
+        }
+
+        function submitName() {
+            const input = document.getElementById('user-name-input');
+            const name = input.value.trim();
+            if(!name) return;
+            userName = name;
+            document.querySelector('.sidebar-logo').insertAdjacentHTML('beforeend', `<div style="font-weight: 800; font-size: 0.8rem; margin-top: 0.5rem; color: #0f172a;">${userName}</div>`);
+            document.getElementById('name-modal').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('name-modal').style.display = 'none';
+                initRealTime();
+            }, 500);
         }
 
         async function initRealTime() {
@@ -1245,6 +1273,11 @@
                         handleCall(call);
                         const c = peer.connect(hostId);
                         handleData(c);
+                        
+                        // Wait for connection to open then send our name
+                        c.on('open', () => {
+                            c.send({ type: 'name-sync', name: userName });
+                        });
                     }
                 });
 
@@ -1334,25 +1367,29 @@
             c.on('open', () => {
                 activeConnections[c.peer] = c;
                 
-                // ROSTER SYNC:
-                // If we are the host, send this new person the LIST of everyone else!
                 const hId = urlParams.get('host');
                 if(!hId) { 
-                    // Host logic: Introduce the new peer to everyone already in the room
-                    const roster = Object.keys(activeConnections).filter(id => id !== c.peer);
-                    c.send({type: 'welcome', roster: roster});
+                    // Host logic: Introduce the new peer and send roster with names
+                    const roster = Object.entries(activeConnections)
+                        .filter(([id]) => id !== c.peer)
+                        .map(([id]) => ({ id, name: peerNames[id] || "Guest" }));
                     
-                    // Tell everyone else about this new person
-                    broadcast({type: 'introduce', peerId: c.peer});
+                    c.send({type: 'welcome', roster: roster, hostName: userName});
+                    broadcast({type: 'introduce', peerId: c.peer, name: peerNames[c.peer] || "Guest"});
                 }
             });
 
             c.on('data', (data) => {
-                if(data.type === 'ping') return; // Heartbeat
+                if(data.type === 'ping') return;
+                if(data.type === 'name-sync') {
+                    peerNames[c.peer] = data.name;
+                    // Update UI if video box already exists
+                    const tag = document.querySelector(`#box-${c.peer} .participant-name-tag`);
+                    if(tag) tag.innerText = data.name.toUpperCase();
+                    return;
+                }
                 
                 if(data.type === 're-sync') {
-                    console.log("[P2P] Host ordered a mesh re-sync");
-                    // Reset local call state to allow re-connection
                     activeCalls = {};
                     return;
                 }
@@ -1364,23 +1401,26 @@
                     removeParticipantFromGrid(data.peerId);
                     return;
                 }
-                if(data.type === 'chat') appendMessage({ text: data.text, from: 'THEM' });
+                if(data.type === 'chat') appendMessage({ text: data.text, from: data.name || 'THEM' });
                 if(data.type === 'file') appendMessage({ file: data.data, fileName: data.name, from: 'THEM' });
                 
                 if(data.type === 'welcome') {
-                    // We just joined or were told to re-sync!
-                    data.roster.forEach((otherId, index) => {
-                        if (otherId === peer.id) return;
-                        
-                        // ID-based precedence: prevent both peers from calling each other
+                    peerNames[urlParams.get('host')] = data.hostName;
+                    // Update Host name in grid
+                    const tag = document.querySelector(`#box-${urlParams.get('host')} .participant-name-tag`);
+                    if(tag) tag.innerText = data.hostName.toUpperCase();
+
+                    data.roster.forEach((item, index) => {
+                        const otherId = item.id;
+                        peerNames[otherId] = item.name;
                         if (peer.id < otherId) {
                             if (!activeCalls[otherId]) {
-                                console.log(`[P2P] Repairing/Calling peer ${otherId}`);
                                 setTimeout(() => {
                                     const call = peer.call(otherId, myStream);
                                     handleCall(call);
                                     const conn = peer.connect(otherId);
                                     handleData(conn);
+                                    conn.on('open', () => conn.send({type: 'name-sync', name: userName}));
                                 }, (index + 1) * 800);
                             }
                         }
@@ -1389,14 +1429,14 @@
 
                 if(data.type === 'introduce') {
                     const otherId = data.peerId;
-                    if (otherId === peer.id) return;
+                    peerNames[otherId] = data.name;
                     if (peer.id < otherId && !activeCalls[otherId]) {
-                        console.log(`[P2P] Connecting to introduced peer ${otherId}`);
                         setTimeout(() => {
                             const newCall = peer.call(otherId, myStream);
                             handleCall(newCall);
                             const newConn = peer.connect(otherId);
                             handleData(newConn);
+                            newConn.on('open', () => newConn.send({type: 'name-sync', name: userName}));
                         }, 500);
                     }
                 }
@@ -1414,9 +1454,10 @@
             const box = document.createElement('div');
             box.className = 'participant-box';
             box.id = `box-${peerId}`;
+            const displayName = peerNames[peerId] || "Guest";
             box.innerHTML = `
                 <video id="video-${peerId}" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; border-radius: 20px;"></video>
-                <div class="participant-name-tag">GUEST (ID: ${peerId.substring(peerId.length - 4)})</div>
+                <div class="participant-name-tag">${displayName.toUpperCase()}</div>
             `;
             grid.appendChild(box);
             const v = document.getElementById(`video-${peerId}`);
@@ -2003,9 +2044,13 @@
             const m = document.getElementById('chat-messages');
             if (!m) return;
             const d = document.createElement('div');
-            d.className = 'message ' + (msg.from === 'ME' ? 'you' : 'them');
+            d.className = 'message ' + (msg.from === 'ME' || msg.from === 'YOU' ? 'you' : 'them');
+            
+            const fromName = (msg.from === 'ME' || msg.from === 'YOU') ? userName : (msg.from || 'Guest');
+            const nameLabel = `<div style="font-size: 0.6rem; font-weight: 800; color: #64748b; margin-bottom: 4px; text-transform: uppercase; margin-left: 10px;">${fromName}</div>`;
+
             if(msg.file) {
-                d.innerHTML = `
+                d.innerHTML = nameLabel + `
                 <div style="background: rgba(15, 23, 42, 0.05); padding: 15px; border-radius: 18px; border: 1px solid rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 10px; width: 220px;">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <span style="font-size: 0.7rem; font-weight: 900; color: #3b82f6;">DOC</span>
@@ -2017,7 +2062,7 @@
                     <button onclick="previewFile('${msg.file}')" style="background: #0f172a; color: white; padding: 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">OPEN FOR PREVIEW</button>
                 </div>`;
             } else {
-                d.innerText = msg.text;
+                d.innerHTML = nameLabel + `<div style="padding: 10px 15px; background: ${msg.from === 'ME' || msg.from === 'YOU' ? '#f1f5f9' : '#ffffff'}; border-radius: 15px; border: 1px solid #e2e8f0; display: inline-block;">${msg.text}</div>`;
             }
             m.appendChild(d);
             m.scrollTop = m.scrollHeight;
@@ -2031,7 +2076,7 @@
             const reader = new FileReader();
             reader.onload = () => {
                 const data = reader.result;
-                broadcast({ type: 'file', data: data, name: f.name });
+                broadcast({ type: 'file', data: data, name: f.name, senderName: userName });
                 appendMessage({ file: data, fileName: f.name, from: 'ME' });
             };
             reader.readAsDataURL(f);
@@ -2047,7 +2092,7 @@
             const txt = i.value.trim();
             if(!txt) return;
             appendMessage({ text: txt, from: 'ME' });
-            broadcast({ type: 'chat', text: txt });
+            broadcast({ type: 'chat', text: txt, name: userName });
             i.value = '';
         }
 
@@ -2098,8 +2143,7 @@
             initParticles('Space');
             updateClock();
             setInterval(updateClock, 1000);
-            // Automatic start on load
-            initRealTime();
+            // Automatic start on load is now handled by name-modal submit
         });
 
         window.addEventListener('resize', () => {
