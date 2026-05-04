@@ -1573,7 +1573,7 @@
             broadcast({type: 'leave', peerId: peer.id});
         };
         
-        initRealTime();
+        // initRealTime() removed from here to prevent premature permission prompts
 
         function showView(v) {
             const views = ['meetings', 'whiteboard', 'calendar', 'settings'];
