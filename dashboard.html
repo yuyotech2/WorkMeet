@@ -2101,12 +2101,51 @@
 
         async function toggleScreenShare() {
             try {
-                const s = await navigator.mediaDevices.getDisplayMedia({video: true});
-                const v = document.getElementById('user-video');
-                v.srcObject = s;
-                document.getElementById('btn-share').classList.toggle('sharing');
-                alert("Screen Sharing Active!");
-            } catch(e) { alert("Sharing Error: " + e.message); }
+                const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                const videoEl = document.getElementById('user-video');
+                const screenTrack = screenStream.getVideoTracks()[0];
+                
+                // Update local UI
+                videoEl.srcObject = screenStream;
+                document.getElementById('btn-share').classList.add('sharing');
+
+                // SYNC TRACKS: Update all active P2P calls to use the screen track
+                Object.values(activeCalls).forEach(call => {
+                    const senders = call.peerConnection.getSenders();
+                    const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+                    if (videoSender) {
+                        videoSender.replaceTrack(screenTrack);
+                    }
+                });
+
+                // Listen for 'Stop Sharing' button from the browser
+                screenTrack.onended = () => {
+                    console.log("[P2P] Screen sharing stopped by user.");
+                    stopScreenShare();
+                };
+                
+            } catch(e) { 
+                console.error("Screen Share Error:", e);
+                alert("Could not share screen: " + e.message); 
+            }
+        }
+
+        function stopScreenShare() {
+            const videoEl = document.getElementById('user-video');
+            if (myStream) {
+                const cameraTrack = myStream.getVideoTracks()[0];
+                videoEl.srcObject = myStream;
+                
+                // Revert tracks for all participants
+                Object.values(activeCalls).forEach(call => {
+                    const senders = call.peerConnection.getSenders();
+                    const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+                    if (videoSender) {
+                        videoSender.replaceTrack(cameraTrack);
+                    }
+                });
+            }
+            document.getElementById('btn-share').classList.remove('sharing');
         }
 
         async function toggleCamera() {
