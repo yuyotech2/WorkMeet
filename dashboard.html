@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DASHBOARD v2 | Exo-Pulsar</title>
+    <title>MASTER DASHBOARD | Exo-Pulsar</title>
     <link rel="stylesheet" href="dashboard.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400..800&family=Inter:wght@400..800&family=JetBrains+Mono:wght@400..800&family=Rubik:wght@400..800&family=Manrope:wght@400..800&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
         .hidden { display: none !important; }
 
@@ -536,8 +536,6 @@
                     
                     <div style="background: white; border-radius: 30px; border: 2px solid #e2e8f0; box-shadow: 0 20px 50px rgba(0,0,0,0.05); padding: 3rem; max-width: 800px;">
                         
-                        <!-- General & Appearance Setting -->
-
                         <div style="margin-bottom: 2.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 2.5rem;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                                 <h3 style="font-size: 1.2rem; color: #0f172a; margin: 0;">Audio & Video Devices</h3>
@@ -560,7 +558,7 @@
                             <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 1rem; font-weight: 600;">STATUS: Device names are hidden for security on local files. Upload to GitHub to reveal full names.</p>
                         </div>
 
-
+                        <!-- General & Appearance Setting -->
                         <div style="margin-bottom: 2.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 2.5rem;">
                             <h3 style="font-size: 1.2rem; color: #0f172a; margin-top: 0; margin-bottom: 1.5rem;">General Options</h3>
                             
@@ -664,6 +662,48 @@
                             </div>
                         </div>
 
+                        <!-- Virtual Backgrounds -->
+                        <div style="margin-bottom: 2.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 2.5rem;">
+                            <h3 style="font-size: 1.2rem; color: #0f172a; margin-top: 0; margin-bottom: 1.5rem;">Virtual Backgrounds & Effects</h3>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+                                <div class="bg-card" onclick="selectBg(this)" style="aspect-ratio: 16/9; background: #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid #3b82f6;">
+                                    <span style="font-size: 0.8rem; font-weight: 800; color: #64748b;">None</span>
+                                </div>
+                                <div class="bg-card" onclick="selectBg(this)" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #0ea5e9, #3b82f6, #6366f1); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid transparent;">
+                                    <span style="font-size: 0.8rem; font-weight: 800; color: white;">Office</span>
+                                </div>
+                                <div class="bg-card" onclick="selectBg(this)" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #a855f7, #ec4899, #7c3aed); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid transparent;">
+                                    <span style="font-size: 0.8rem; font-weight: 800; color: white;">Space</span>
+                                </div>
+                                <div class="bg-card" onclick="selectBg(this)" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #f97316, #ef4444, #eab308); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid transparent;">
+                                    <span style="font-size: 0.8rem; font-weight: 800; color: white;">Sunset</span>
+                                </div>
+                                <div class="bg-card" onclick="selectBg(this)" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #10b981, #06b6d4, #3b82f6, #a855f7); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid transparent;">
+                                    <span style="font-size: 0.8rem; font-weight: 800; color: white;">Aurora</span>
+                                </div>
+                                <div class="bg-card" onclick="selectBg(this)" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #0c4a6e, #0369a1, #0891b2); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid transparent;">
+                                    <span style="font-size: 0.8rem; font-weight: 800; color: white;">Ocean</span>
+                                </div>
+                                <div class="bg-card" onclick="selectBg(this)" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #020617, #0f172a, #1e1b4b); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid transparent;">
+                                    <span style="font-size: 0.8rem; font-weight: 800; color: white;">Midnight</span>
+                                </div>
+                                <div class="bg-card" onclick="selectBg(this)" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #14532d, #166534, #15803d); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid transparent;">
+                                    <span style="font-size: 0.8rem; font-weight: 800; color: white;">Forest</span>
+                                </div>
+                                <div class="bg-card" onclick="selectBg(this)" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #581c87, #1e1b4b, #831843); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid transparent;">
+                                    <span style="font-size: 0.8rem; font-weight: 800; color: white;">Neon</span>
+                                </div>
+                                <div class="bg-card" onclick="selectBg(this)" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #fb7185, #f472b6, #c084fc, #60a5fa); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid transparent;">
+                                    <span style="font-size: 0.8rem; font-weight: 800; color: white;">Candy</span>
+                                </div>
+                                <div class="bg-card" onclick="selectBg(this)" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #7f1d1d, #dc2626, #991b1b); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid transparent;">
+                                    <span style="font-size: 0.8rem; font-weight: 800; color: white;">Lava</span>
+                                </div>
+                                <div class="bg-card" onclick="selectBg(this)" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #94a3b8, #64748b, #475569); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid transparent;">
+                                    <span style="font-size: 0.8rem; font-weight: 800; color: white;">Blur</span>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Advanced Audio -->
                         <div style="margin-bottom: 2.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 2.5rem;">
@@ -756,45 +796,13 @@
                             </div>
                         </div>
 
-                        <!-- Dashboard Themes -->
-                        <div style="margin-bottom: 2.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 2.5rem;">
-                            <h3 style="font-size: 1.2rem; color: #0f172a; margin-top: 0; margin-bottom: 1.5rem;">Dashboard Themes</h3>
-                            <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1.5rem;">Choose a visual style for your workspace. These themes change the background, particles, and accent colors.</p>
-                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
-                                <div class="bg-card" onclick="selectBg(this)" style="aspect-ratio: 16/9; background: #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid #3b82f6;">
-                                    <span style="font-size: 0.8rem; font-weight: 800; color: #64748b;">NONE</span>
-                                </div>
-                                <div class="bg-card" onclick="selectBg(this)" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #0ea5e9, #3b82f6, #6366f1); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid transparent;">
-                                    <span style="font-size: 0.8rem; font-weight: 800; color: white;">OFFICE</span>
-                                </div>
-                                <div class="bg-card" onclick="selectBg(this)" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #a855f7, #ec4899, #7c3aed); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid transparent;">
-                                    <span style="font-size: 0.8rem; font-weight: 800; color: white;">SPACE</span>
-                                </div>
-                                <div class="bg-card" onclick="selectBg(this)" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #f97316, #ef4444, #eab308); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid transparent;">
-                                    <span style="font-size: 0.8rem; font-weight: 800; color: white;">SUNSET</span>
-                                </div>
-                                <div class="bg-card" onclick="selectBg(this)" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #10b981, #06b6d4, #3b82f6, #a855f7); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid transparent;">
-                                    <span style="font-size: 0.8rem; font-weight: 800; color: white;">AURORA</span>
-                                </div>
-                                <div class="bg-card" onclick="selectBg(this)" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #0c4a6e, #0369a1, #0891b2); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid transparent;">
-                                    <span style="font-size: 0.8rem; font-weight: 800; color: white;">OCEAN</span>
-                                </div>
-                                <div class="bg-card" onclick="selectBg(this)" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #020617, #0f172a, #1e1b4b); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid transparent;">
-                                    <span style="font-size: 0.8rem; font-weight: 800; color: white;">MIDNIGHT</span>
-                                </div>
-                                <div class="bg-card" onclick="selectBg(this)" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #14532d, #166534, #15803d); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid transparent;">
-                                    <span style="font-size: 0.8rem; font-weight: 800; color: white;">FOREST</span>
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- UI & Appearance Customization -->
                         <div style="margin-bottom: 2.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 2.5rem;">
-                            <h3 style="font-size: 1.2rem; color: #0f172a; margin-top: 0; margin-bottom: 1.5rem;">Accent Colors & Typography</h3>
+                            <h3 style="font-size: 1.2rem; color: #0f172a; margin-top: 0; margin-bottom: 1.5rem;">Appearance Customization</h3>
                             
                             <div style="display: flex; gap: 2rem;">
                                 <div style="flex: 1;">
-                                    <label style="display: block; font-weight: 800; color: #94a3b8; font-size: 0.75rem; letter-spacing: 1px; margin-bottom: 0.5rem;">PRIMARY ACCENT</label>
+                                    <label style="display: block; font-weight: 800; color: #94a3b8; font-size: 0.75rem; letter-spacing: 1px; margin-bottom: 0.5rem;">THEME COLOR</label>
                                     <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; width: fit-content;">
                                         <div class="theme-dot" onclick="selectTheme(this)" style="width: 32px; height: 32px; background: #008291; border-radius: 8px; border: 3px solid #0f172a; cursor: pointer;"></div>
                                         <div class="theme-dot" onclick="selectTheme(this)" style="width: 32px; height: 32px; background: #ea580c; border-radius: 8px; cursor: pointer; border: none;"></div>
@@ -802,6 +810,12 @@
                                         <div class="theme-dot" onclick="selectTheme(this)" style="width: 32px; height: 32px; background: #e11d48; border-radius: 8px; cursor: pointer; border: none;"></div>
                                         <div class="theme-dot" onclick="selectTheme(this)" style="width: 32px; height: 32px; background: #14b8a6; border-radius: 8px; cursor: pointer; border: none;"></div>
                                         <div class="theme-dot" onclick="selectTheme(this)" style="width: 32px; height: 32px; background: #3b82f6; border-radius: 8px; cursor: pointer; border: none;"></div>
+                                        <div class="theme-dot" onclick="selectTheme(this)" style="width: 32px; height: 32px; background: #f59e0b; border-radius: 8px; cursor: pointer; border: none;"></div>
+                                        <div class="theme-dot" onclick="selectTheme(this)" style="width: 32px; height: 32px; background: #10b981; border-radius: 8px; cursor: pointer; border: none;"></div>
+                                        <div class="theme-dot" onclick="selectTheme(this)" style="width: 32px; height: 32px; background: #6366f1; border-radius: 8px; cursor: pointer; border: none;"></div>
+                                        <div class="theme-dot" onclick="selectTheme(this)" style="width: 32px; height: 32px; background: #ec4899; border-radius: 8px; cursor: pointer; border: none;"></div>
+                                        <div class="theme-dot" onclick="selectTheme(this)" style="width: 32px; height: 32px; background: #475569; border-radius: 8px; cursor: pointer; border: none;"></div>
+                                        <div class="theme-dot" onclick="selectTheme(this)" style="width: 32px; height: 32px; background: #101827; border-radius: 8px; cursor: pointer; border: none;"></div>
                                         <div style="position: relative; width: 32px; height: 32px; background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; overflow: hidden;">
                                             <input type="color" oninput="document.documentElement.style.setProperty('--primary', this.value); document.querySelectorAll('.theme-dot').forEach(d => d.style.border='none');" style="position: absolute; width: 150%; height: 150%; padding: 0; border: none; cursor: pointer; opacity: 0;">
                                             <span style="color: white; font-size: 1rem; font-weight: 800; pointer-events: none;">+</span>
@@ -1138,7 +1152,6 @@
         let activeConnections = {}; 
         let activeCalls = {};       
         
-        
         // --- WHITEBOARD MEMORY (Safe Sync) ---
         let whiteboardLoaded = false;
         let lastX = 0;
@@ -1146,82 +1159,102 @@
         let penColor = '#0f172a';
         let penSize = 4;
         let drawing = false;
-        let canvas, ctx;
+        let canvas, ctx; // GLOBAL REFERENCES
+
+        // --- SECURE CONTEXT CHECK (Camera/Mic require HTTPS on mobile) ---
+        if(!window.isSecureContext) {
+            console.warn('NOT A SECURE CONTEXT - Camera/Mic will be blocked by the browser.');
+        }
 
         async function initRealTime() {
-            if (peer) return; 
+            if (peer) return; // ALREADY INITIALIZED
             try {
+                // Guard: mediaDevices API requires HTTPS on mobile
                 if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                     const msg = window.isSecureContext === false
                         ? 'Camera/Mic requires HTTPS. Please host this site on GitHub Pages or a secure server.'
                         : 'Your browser does not support camera/microphone access.';
                     console.error(msg);
+                    // Show visible warning on the guest placeholder
                     const ph = document.getElementById('guest-placeholder');
                     if(ph) ph.innerHTML = `<p style="color:#ef4444; font-weight:800; font-size:0.75rem; padding:1rem;">${msg}</p>`;
                     return;
                 }
-
-                const videoConstraints = {
-                    width: { ideal: 640 },
-                    height: { ideal: 360 },
-                    frameRate: { max: 24 },
-                    facingMode: "user"
-                };
+                // Mobile-friendly constraints: facingMode 'user' = front camera
+                const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                const videoConstraints = isMobile
+                    ? { facingMode: 'user', width: { ideal: 320 }, height: { ideal: 240 }, frameRate: { ideal: 15 } }
+                    : { width: 640, height: 360, frameRate: 24 };
 
                 myStream = await navigator.mediaDevices.getUserMedia({
                     video: videoConstraints,
                     audio: true
                 });
-                
                 const videoEl = document.getElementById('user-video');
-                if (videoEl) {
-                    videoEl.srcObject = myStream;
-                    videoEl.play().catch(e => {
-                        console.warn("Auto-play blocked:", e);
-                    });
-                }
+                videoEl.srcObject = myStream;
+                videoEl.setAttribute('playsinline', 'true');
+                videoEl.setAttribute('autoplay', 'true');
+                videoEl.muted = true;
+                // Force play (some mobile browsers need explicit play after srcObject set)
+                videoEl.play().catch(() => {});
 
                 isCameraOn = true; isMicOn = true;
-                initPeer();
+                document.getElementById('btn-video').classList.remove('off');
+                document.getElementById('btn-mic').classList.remove('off');
+                document.getElementById('camera-off-overlay').style.display = 'none';
+                
+                // POPULATE HARDWARE SELECTORS
+                await updateDeviceList();
+                
+                const myId = roomName.replace(/\s+/g, '') + '-' + Date.now() + '-' + Math.floor(Math.random()*1000);
+                peer = new Peer(myId, {
+                    config: {
+                        'iceServers': [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:stun1.l.google.com:19302' },
+                            { urls: 'stun:stun.cloudflare.com:3478' },
+                            { urls: 'stun:stun.stunprotocol.org:3478' }
+                        ],
+                        'iceTransportPolicy': 'all'
+                    }
+                });
+                
+                peer.on('open', (id) => {
+                    console.log("PEER ONLINE: " + id);
+                    const hostId = urlParams.get('host');
+                    if(hostId && hostId !== id) {
+                        const call = peer.call(hostId, myStream);
+                        handleCall(call);
+                        const c = peer.connect(hostId);
+                        handleData(c);
+                    }
+                });
+
+                peer.on('connection', (c) => handleData(c));
+                peer.on('call', (call) => {
+                    if (myStream) {
+                        call.answer(myStream);
+                        handleCall(call);
+                    } else {
+                        console.warn("[P2P] Answering call without local stream");
+                        call.answer();
+                        handleCall(call);
+                    }
+                });
+
+                // Periodic Heartbeat to keep connections alive
+                setInterval(() => {
+                    broadcast({ type: 'ping' });
+                }, 10000); // Every 10s
             } catch(e) {
                 console.error('Media access error:', e);
-                const ph = document.getElementById('guest-placeholder');
-                if(ph) ph.innerHTML = `<p style="color:#ef4444; font-weight:800; font-size:0.75rem; padding:1rem;">Access Denied: ${e.message}</p>`;
+                // ... rest of error logic
             }
-        }
-
-        function initPeer() {
-            const myId = roomName.replace(/\s+/g, '') + '-' + Date.now() + '-' + Math.floor(Math.random()*1000);
-            peer = new Peer(myId, {
-                config: {
-                    'iceServers': [
-                        { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:stun1.l.google.com:19302' },
-                        { urls: 'stun:stun.cloudflare.com:3478' }
-                    ]
-                }
-            });
-
-            peer.on('open', (id) => {
-                const hId = urlParams.get('host');
-                if (hId) {
-                    const conn = peer.connect(hId);
-                    if(typeof handleData === 'function') handleData(conn);
-                    const call = peer.call(hId, myStream);
-                    if(typeof handleCall === 'function') handleCall(call);
-                }
-            });
-
-            if(typeof handleData === 'function') peer.on('connection', handleData);
-            peer.on('call', (call) => {
-                call.answer(myStream);
-                if(typeof handleCall === 'function') handleCall(call);
-            });
         }
 
         function repairConnections() {
             console.log("[P2P] Initiating Deep Mesh Repair...");
-            const hostId = urlParams.get('host');
+            const hId = urlParams.get('host');
             
             // Clear existing boxes (except self)
             const grid = document.querySelector('.video-grid');
@@ -1234,18 +1267,20 @@
             
             // Reset local registries to force clean re-connections
             activeCalls = {};
+            // Note: we keep activeConnections (data) alive to send the repair signals
             
-            if (hostId && peer) {
+            if (hId && peer) {
                 // Guests: Reach out to host
-                const c = peer.connect(hostId);
+                const c = peer.connect(hId);
                 handleData(c);
-                const call = peer.call(hostId, myStream);
+                const call = peer.call(hId, myStream);
                 handleCall(call);
             } else if (peer) {
                 // Host: Force all guests to re-sync
                 Object.entries(activeConnections).forEach(([id, conn]) => {
                     if (conn.open) {
                         const roster = Object.keys(activeConnections).filter(pid => pid !== id);
+                        // Add host to the roster explicitly
                         roster.push(peer.id);
                         conn.send({ type: 'welcome', roster: roster });
                     }
@@ -1261,19 +1296,6 @@
                     updateParticipantCount();
                 }, 3000);
             }
-        }
-
-
-        function updateStreamForAll(newStream) {
-            myStream = newStream; // Update global myStream so new callers get the right one
-            const videoTrack = newStream.getVideoTracks()[0];
-            
-            Object.values(activeCalls).forEach(call => {
-                const sender = call.peerConnection.getSenders().find(s => s.track.kind === 'video');
-                if (sender) {
-                    sender.replaceTrack(videoTrack);
-                }
-            });
         }
 
         function handleCall(call) {
@@ -1599,17 +1621,18 @@
             if (particleInterval) { cancelAnimationFrame(particleInterval); ctx.clearRect(0,0,canvas.width,canvas.height); }
             canvas.classList.remove('active');
 
-            if (name === "NONE") {
+            if (name === "None") {
                 document.body.classList.add('bg-none');
             } else {
                 const classMap = {
-                    "OFFICE": 'bg-office', "SPACE": 'bg-space', "SUNSET": 'bg-sunset', 
-                    "AURORA": 'bg-aurora', "OCEAN": 'bg-ocean', "MIDNIGHT": 'bg-midnight', 
-                    "FOREST": 'bg-forest'
+                    "Blur": 'bg-blur', "Office": 'bg-office', "Space": 'bg-space',
+                    "Sunset": 'bg-sunset', "Aurora": 'bg-aurora', "Ocean": 'bg-ocean',
+                    "Midnight": 'bg-midnight', "Forest": 'bg-forest', "Neon": 'bg-neon',
+                    "Candy": 'bg-candy', "Lava": 'bg-lava'
                 };
                 if (classMap[name]) document.body.classList.add(classMap[name]);
                 canvas.classList.add('active');
-                initParticles(bgParticleColors[name.charAt(0) + name.slice(1).toLowerCase()] || ['rgba(255,255,255,0.2)']);
+                initParticles(bgParticleColors[name] || ['rgba(255,255,255,0.2)']);
             }
         }
 
@@ -2045,8 +2068,8 @@
             }
         }
         
+        // --- RELAUNCH CORE ENGINES ---
         window.addEventListener('load', () => {
-            document.body.classList.add('bg-space');
             initWhiteboard();
             initParticles('Space');
             updateClock();

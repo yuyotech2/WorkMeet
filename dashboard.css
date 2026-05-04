@@ -22,34 +22,19 @@ body {
     font-family: var(--font-main);
 }
 
-/* Global Particle Canvas */
-#particle-canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    pointer-events: none;
-}
-
 .app-container {
     display: flex;
     width: 100%;
     height: 100vh;
-    position: relative;
-    z-index: 1;
 }
 
 
 /* Sidebar */
 .sidebar {
     width: 280px;
-    background: rgba(255, 255, 255, 0.8); /* Glassmorphism sidebar */
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.05);
-    border-right: 1px solid rgba(255, 255, 255, 0.3);
+    background: #ffffff; /* Crisp white sidebar */
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.03);
+    border-right: none;
     display: flex;
     flex-direction: column;
     padding: 1.5rem;
