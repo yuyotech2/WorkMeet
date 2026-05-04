@@ -1186,12 +1186,15 @@
             const input = document.getElementById('user-name-input');
             const name = input.value.trim();
             if(!name) return;
+            
+            // START PERMISSION IMMEDIATELY (User Gesture requirement)
+            initRealTime();
+            
             userName = name;
             document.querySelector('.sidebar-logo').insertAdjacentHTML('beforeend', `<div style="font-weight: 800; font-size: 0.8rem; margin-top: 0.5rem; color: #0f172a;">${userName}</div>`);
             document.getElementById('name-modal').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('name-modal').style.display = 'none';
-                initRealTime();
             }, 500);
         }
 
