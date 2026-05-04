@@ -1168,6 +1168,12 @@
         let activeCalls = {};
         let peerNames = {}; // Store names of other participants
         
+        // --- CALENDAR MEMORY (Load from Storage) ---
+        let scheduledMeetings = JSON.parse(localStorage.getItem(`exo_calendar_${roomName}`) || '{}');
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let activeScheduleKey = null; // Stored as 'YYYY-M-D'
+
         // --- WHITEBOARD MEMORY (Safe Sync) ---
         let whiteboardLoaded = false;
         let lastX = 0;
@@ -1369,12 +1375,17 @@
                 
                 const hId = urlParams.get('host');
                 if(!hId) { 
-                    // Host logic: Introduce the new peer and send roster with names
+                    // Host logic: Introduce the new peer and send roster + calendar
                     const roster = Object.entries(activeConnections)
                         .filter(([id]) => id !== c.peer)
                         .map(([id]) => ({ id, name: peerNames[id] || "Guest" }));
                     
-                    c.send({type: 'welcome', roster: roster, hostName: userName});
+                    c.send({
+                        type: 'welcome', 
+                        roster: roster, 
+                        hostName: userName,
+                        calendarState: scheduledMeetings
+                    });
                     broadcast({type: 'introduce', peerId: c.peer, name: peerNames[c.peer] || "Guest"});
                 }
             });
@@ -1401,11 +1412,24 @@
                     removeParticipantFromGrid(data.peerId);
                     return;
                 }
+                if(data.type === 'calendar-sync') {
+                    scheduledMeetings = data.state;
+                    localStorage.setItem(`exo_calendar_${roomName}`, JSON.stringify(scheduledMeetings));
+                    if(!document.getElementById('calendar-view').classList.contains('hidden')) {
+                        renderCalendar();
+                    }
+                    return;
+                }
+
                 if(data.type === 'chat') appendMessage({ text: data.text, from: data.name || 'THEM' });
                 if(data.type === 'file') appendMessage({ file: data.data, fileName: data.name, from: 'THEM' });
                 
                 if(data.type === 'welcome') {
                     peerNames[urlParams.get('host')] = data.hostName;
+                    if(data.calendarState) {
+                        scheduledMeetings = data.calendarState;
+                        localStorage.setItem(`exo_calendar_${roomName}`, JSON.stringify(scheduledMeetings));
+                    }
                     // Update Host name in grid
                     const tag = document.querySelector(`#box-${urlParams.get('host')} .participant-name-tag`);
                     if(tag) tag.innerText = data.hostName.toUpperCase();
@@ -1830,7 +1854,13 @@
             if(!scheduledMeetings[activeScheduleKey]) scheduledMeetings[activeScheduleKey] = [];
             scheduledMeetings[activeScheduleKey].push({ subject, time });
             
-            renderCalendar(); // Re-render to show new entry
+            // Persist locally
+            localStorage.setItem(`exo_calendar_${roomName}`, JSON.stringify(scheduledMeetings));
+            
+            // Broadcast to room
+            broadcast({ type: 'calendar-sync', state: scheduledMeetings });
+            
+            renderCalendar(); 
             closeSchedule();
         }
 
